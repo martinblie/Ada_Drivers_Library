@@ -35,12 +35,20 @@ package body nRF.GPIO is
 
    overriding
    function Mode (This : GPIO_Point) return HAL.GPIO.GPIO_Mode is
-      CNF : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin);
+      CNF_P0 : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin MOD 32);
+	  CNF_P1 : PIN_CNF_Register renames GPIO_Periph1.PIN_CNF (This.Pin MOD 32);
    begin
-      case CNF.DIR is
-         when Input => return HAL.GPIO.Input;
-         when Output => return HAL.GPIO.Output;
-      end case;
+	  if This.Pin > 31 then
+		  case CNF_P1.DIR is
+			 when Input => return HAL.GPIO.Input;
+			 when Output => return HAL.GPIO.Output;
+		  end case;
+	  else 
+		  case CNF_P0.DIR is
+			 when Input => return HAL.GPIO.Input;
+			 when Output => return HAL.GPIO.Output;
+		  end case;
+	  end if;
    end Mode;
 
    --------------
@@ -51,14 +59,24 @@ package body nRF.GPIO is
    procedure Set_Mode (This : in out GPIO_Point;
                        Mode : HAL.GPIO.GPIO_Config_Mode)
    is
-      CNF : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin);
+      CNF_P0 : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin MOD 32);
+	  CNF_P1 : PIN_CNF_Register renames GPIO_Periph1.PIN_CNF (This.Pin MOD 32);
    begin
-      CNF.DIR := (case Mode is
+	  if This.Pin > 31 then
+      CNF_P1.DIR := (case Mode is
                      when HAL.GPIO.Input  => Input,
                      when HAL.GPIO.Output => Output);
-      CNF.INPUT := (case Mode is
+      CNF_P1.INPUT := (case Mode is
                        when HAL.GPIO.Input  => Connect,
                        when HAL.GPIO.Output => Disconnect);
+	  else
+	  CNF_P0.DIR := (case Mode is
+                     when HAL.GPIO.Input  => Input,
+                     when HAL.GPIO.Output => Output);
+      CNF_P0.INPUT := (case Mode is
+                       when HAL.GPIO.Input  => Connect,
+                       when HAL.GPIO.Output => Disconnect);
+	   end if;
    end Set_Mode;
 
    ---------
@@ -71,7 +89,12 @@ package body nRF.GPIO is
       return Boolean
    is
    begin
-      return GPIO_Periph.IN_k.Arr (This.Pin) = High;
+     if This.Pin > 31 then
+        return GPIO_Periph1.IN_k.Arr (This.Pin MOD 32) = High;
+	 else
+	     return GPIO_Periph.IN_k.Arr (This.Pin MOD 32) = High;
+	 end if;
+	 
    end Set;
 
    -------------------
@@ -83,11 +106,20 @@ package body nRF.GPIO is
                            return HAL.GPIO.GPIO_Pull_Resistor
    is
    begin
-      case GPIO_Periph.PIN_CNF (This.Pin).PULL is
+   if This.Pin > 31 then
+      case GPIO_Periph1.PIN_CNF (This.Pin MOD 32).PULL is
          when Disabled => return HAL.GPIO.Floating;
          when Pulldown => return HAL.GPIO.Pull_Down;
          when Pullup => return HAL.GPIO.Pull_Up;
       end case;
+    else
+	  case GPIO_Periph.PIN_CNF (This.Pin MOD 32).PULL is
+         when Disabled => return HAL.GPIO.Floating;
+         when Pulldown => return HAL.GPIO.Pull_Down;
+         when Pullup => return HAL.GPIO.Pull_Up;
+      end case;
+    end if;
+	    
    end Pull_Resistor;
 
    -----------------------
@@ -99,11 +131,19 @@ package body nRF.GPIO is
                                 Pull : HAL.GPIO.GPIO_Pull_Resistor)
    is
    begin
-      GPIO_Periph.PIN_CNF (This.Pin).PULL :=
+     if This.Pin > 31 then
+      GPIO_Periph1.PIN_CNF (This.Pin MOD 32).PULL :=
         (case Pull is
             when HAL.GPIO.Floating  => Disabled,
             when HAL.GPIO.Pull_Down => Pulldown,
             when HAL.GPIO.Pull_Up   => Pullup);
+	 else
+	 GPIO_Periph.PIN_CNF (This.Pin MOD 32).PULL :=
+        (case Pull is
+            when HAL.GPIO.Floating  => Disabled,
+            when HAL.GPIO.Pull_Down => Pulldown,
+            when HAL.GPIO.Pull_Up   => Pullup);
+	 end if;
    end Set_Pull_Resistor;
 
    ---------
@@ -114,7 +154,11 @@ package body nRF.GPIO is
      (This : in out GPIO_Point)
    is
    begin
-      GPIO_Periph.OUT_k.Arr (This.Pin) := High;
+	  if This.Pin > 31 then
+		GPIO_Periph1.OUT_k.Arr (This.Pin MOD 32) := High;
+	  else
+		GPIO_Periph.OUT_k.Arr (This.Pin MOD 32) := High;
+	  end if;
    end Set;
 
    -----------
@@ -125,7 +169,11 @@ package body nRF.GPIO is
      (This : in out GPIO_Point)
    is
    begin
-      GPIO_Periph.OUT_k.Arr (This.Pin) := Low;
+	  if This.Pin > 31 then
+		GPIO_Periph1.OUT_k.Arr (This.Pin MOD 32) := Low;
+	  else
+	    GPIO_Periph.OUT_k.Arr (This.Pin MOD 32) := Low;
+	  end if;
    end Clear;
 
    ------------
@@ -151,22 +199,24 @@ package body nRF.GPIO is
      (This   : GPIO_Point;
       Config : GPIO_Configuration)
    is
-      CNF : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin);
+      CNF_P0 : PIN_CNF_Register renames GPIO_Periph.PIN_CNF (This.Pin MOD 32);
+	  CNF_P1 : PIN_CNF_Register renames GPIO_Periph1.PIN_CNF (This.Pin MOD 32);
    begin
-      CNF.DIR := (case Config.Mode is
+	if This.Pin > 31 then
+		CNF_P1.DIR := (case Config.Mode is
                      when Mode_In  => Input,
                      when Mode_Out => Output);
 
-      CNF.INPUT := (case Config.Input_Buffer is
+		CNF_P1.INPUT := (case Config.Input_Buffer is
                        when Input_Buffer_Connect    => Connect,
                        when Input_Buffer_Disconnect => Disconnect);
 
-      CNF.PULL := (case Config.Resistors is
+		CNF_P1.PULL := (case Config.Resistors is
                       when No_Pull   => Disabled,
                       when Pull_Up   => Pullup,
                       when Pull_Down => Pulldown);
 
-      CNF.DRIVE := (case Config.Drive is
+		CNF_P1.DRIVE := (case Config.Drive is
                        when Drive_S0S1 => S0S1,
                        when Drive_H0S1 => H0S1,
                        when Drive_S0H1 => S0H1,
@@ -176,10 +226,40 @@ package body nRF.GPIO is
                        when Drive_S0D1 => S0D1,
                        when Drive_H0D1 => H0D1);
 
-      CNF.SENSE := (case Config.Sense is
+		CNF_P1.SENSE := (case Config.Sense is
                        when Sense_Disabled       => Disabled,
                        when Sense_For_High_Level => High,
                        when Sense_For_Low_Level  => Low);
+					   
+	else
+		CNF_P0.DIR := (case Config.Mode is
+                     when Mode_In  => Input,
+                     when Mode_Out => Output);
+
+		CNF_P0.INPUT := (case Config.Input_Buffer is
+                       when Input_Buffer_Connect    => Connect,
+                       when Input_Buffer_Disconnect => Disconnect);
+
+		CNF_P0.PULL := (case Config.Resistors is
+                      when No_Pull   => Disabled,
+                      when Pull_Up   => Pullup,
+                      when Pull_Down => Pulldown);
+
+		CNF_P0.DRIVE := (case Config.Drive is
+                       when Drive_S0S1 => S0S1,
+                       when Drive_H0S1 => H0S1,
+                       when Drive_S0H1 => S0H1,
+                       when Drive_H0H1 => H0H1,
+                       when Drive_D0S1 => D0S1,
+                       when Drive_D0H1 => D0H1,
+                       when Drive_S0D1 => S0D1,
+                       when Drive_H0D1 => H0D1);
+
+		CNF_P0.SENSE := (case Config.Sense is
+                       when Sense_Disabled       => Disabled,
+                       when Sense_For_High_Level => High,
+                       when Sense_For_Low_Level  => Low);
+	end if;
    end Configure_IO;
 
 end nRF.GPIO;

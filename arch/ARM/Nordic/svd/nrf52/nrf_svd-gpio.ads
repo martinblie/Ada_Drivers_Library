@@ -570,8 +570,12 @@ package NRF_SVD.GPIO is
       PIN_CNF    at 16#700# range 0 .. 1023;
    end record;
 
-   --  GPIO Port 1
+   --  GPIO Port 0
    GPIO_Periph : aliased GPIO_Peripheral
      with Import, Address => P0_Base;
+	 
+   --  GPIO Port 1
+   GPIO_Periph1 : aliased GPIO_Peripheral
+     with Import, Address => P1_Base;
 
 end NRF_SVD.GPIO;

@@ -133,6 +133,22 @@ projects = [
             "/examples/MicroBit/follower/follower.gpr",
             "/examples/MicroBit/accelerometer/accelerometer.gpr",
 
+            # MicroBit v2
+			"/boards/MicroBit_v2/microbit_v2_zfp.gpr",
+			"/boards/MicroBit_v2/microbit_v2_sfp.gpr",
+			"/boards/MicroBit_v2/microbit_v2_full.gpr",
+            "/examples/MicroBit_v2/text_scrolling/text_scrolling.gpr",
+			"/examples/MicroBit_v2/buttons/buttons.gpr",
+            "/examples/MicroBit_v2/digital_in/digital_in.gpr",
+            "/examples/MicroBit_v2/music/music.gpr",
+            "/examples/MicroBit_v2/analog_in/analog_in.gpr",
+            "/examples/MicroBit_v2/analog_out/analog_out.gpr",
+            "/examples/MicroBit_v2/digital_out/digital_out.gpr",
+            "/examples/MicroBit_v2/BLE_beacon/BLE_beacon.gpr",
+            "/examples/MicroBit_v2/servos/servos.gpr",
+            "/examples/MicroBit_v2/accelerometer/accelerometer.gpr",
+			"/examples/MicroBit_v2/ravenscar_tasking/ravenscar_tasking.gpr",
+
             # NRF52_SDK
             "/boards/NRF52_DK/nrf52_dk_zfp.gpr",
             "/examples/NRF52_DK/buttons/buttons.gpr",

@@ -188,8 +188,9 @@ package nRF.Tasks is
    QDEC_STOP              : constant Task_Type;
    QDEC_READCLRACC        : constant Task_Type;
 
-   --  Analof to Digital Converter (ADC)
+   --  Analog to Digital Converter (ADC)
    ADC_START              : constant Task_Type;
+   ADC_SAMPLE             : constant Task_Type;
    ADC_STOP               : constant Task_Type;
 private
 
@@ -415,10 +416,12 @@ private
    QDEC_READCLRACC        : constant Task_Type :=
      Task_Type (NRF_SVD.QDEC.QDEC_Periph.TASKS_READCLRACC'Address);
 
-   --  Analof to Digital Converter (ADC)
+   --  Analog to Digital Converter (ADC)
    ADC_START              : constant Task_Type :=
      Task_Type (NRF_SVD.SAADC.SAADC_Periph.TASKS_START'Address);
    ADC_STOP               : constant Task_Type :=
      Task_Type (NRF_SVD.SAADC.SAADC_Periph.TASKS_STOP'Address);
+    ADC_SAMPLE               : constant Task_Type :=
+     Task_Type (NRF_SVD.SAADC.SAADC_Periph.TASKS_SAMPLE'Address);
 
 end nRF.Tasks;

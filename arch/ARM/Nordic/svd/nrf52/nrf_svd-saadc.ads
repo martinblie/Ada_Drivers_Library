@@ -1846,11 +1846,11 @@ package NRF_SVD.SAADC is
       --  unspecified
       Reserved_6_7   : HAL.UInt2 := 16#0#;
       --  Gain control
-      GAIN           : CONFIG_GAIN_Field := NRF_SVD.SAADC.Gain1_6;
+      GAIN           : CONFIG_GAIN_Field := NRF_SVD.SAADC.Gain1_4;
       --  unspecified
       Reserved_11_11 : HAL.Bit := 16#0#;
       --  Reference control
-      REFSEL         : CONFIG_REFSEL_Field := NRF_SVD.SAADC.Internal;
+      REFSEL         : CONFIG_REFSEL_Field := NRF_SVD.SAADC.Vdd1_4;
       --  unspecified
       Reserved_13_15 : HAL.UInt3 := 16#0#;
       --  Acquisition time, the time the ADC uses to sample the input voltage

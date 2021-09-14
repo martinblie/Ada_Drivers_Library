@@ -38,7 +38,7 @@ package LSM303AGR is
     -- Specifically allowing them in configure procedure
     -- and adjusting conversions after reading the
     -- accelerometer sensor.
-    -- TODO: Add magnetometer support.
+    -- TODdO: Add magnetometer support.
 
    type Register_Address is new UInt8;
    type Device_Identifier is new UInt8;

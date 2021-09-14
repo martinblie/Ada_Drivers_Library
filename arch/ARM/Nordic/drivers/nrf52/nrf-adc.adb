@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
--- Copyright Â© AdaCore and other contributors, 2017-2020                    --
+-- Copyright © AdaCore and other contributors, 2017-2020                    --
 -- See https://github.com/AdaCore/Ada_Drivers_Library/graphs/contributors   --
 -- for more information                                                     --
 --                                                                          --
@@ -30,7 +30,6 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
 with NRF_SVD.SAADC; use NRF_SVD.SAADC;
 with nRF.Tasks;   use nRF.Tasks;
 with System.Storage_Elements;
@@ -124,9 +123,9 @@ package body nRF.ADC is
          when 7 =>
             SAADC_Periph.CH (0).PSELP.PSELP := Analoginput7;
       end case;
-
       SAADC_Periph.ENABLE.ENABLE := Enabled;
       Trigger (ADC_START);
+      Trigger (ADC_SAMPLE);
       Wait_For_Result;
       return Result;
    end Do_Pin_Conversion;
@@ -157,6 +156,7 @@ package body nRF.ADC is
       end case;
 
       SAADC_Periph.ENABLE.ENABLE := Enabled;
+
       Trigger (ADC_START);
       Wait_For_Result;
       return Result;

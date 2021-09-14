@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
--- Copyright Â© AdaCore and other contributors, 2017-2020                    --
+-- Copyright © AdaCore and other contributors, 2017-2020                    --
 -- See https://github.com/AdaCore/Ada_Drivers_Library/graphs/contributors   --
 -- for more information                                                     --
 --                                                                          --
