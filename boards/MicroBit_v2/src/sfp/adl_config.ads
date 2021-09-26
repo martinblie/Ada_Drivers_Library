@@ -6,6 +6,7 @@ package ADL_Config is
    CPU_Core                       : constant String  := "ARM Cortex-M4F";    -- From mcu definition
    Device_Family                  : constant String  := "nRF52";             -- From board definition
    Device_Name                    : constant String  := "nRF52833xxAA";      -- From board definition
+   Has_Custom_Memory_Area_1       : constant Boolean := False;               -- From user input
    Has_Ravenscar_Full_Runtime     : constant String  := "True";              -- From board definition
    Has_Ravenscar_SFP_Runtime      : constant String  := "True";              -- From board definition
    Has_ZFP_Runtime                : constant String  := "True";              -- From board definition
@@ -14,8 +15,8 @@ package ADL_Config is
    Max_Path_Length                : constant         := 1024;                -- From user input
    Number_Of_Interrupts           : constant         := 128;                 -- From MCU definition
    Runtime_Name                   : constant String  := "ravenscar-sfp-nrf52833";   -- From user input
-   Runtime_Name_Suffix            : constant String  := "cortex-m4f";        -- From board definition
-   Runtime_Profile                : constant String  := "ravenscar-sfp-nrf52833";     -- From user input
+   Runtime_Name_Suffix            : constant String  := "nrf52833";        -- From board definition
+   Runtime_Profile                : constant String  := "ravenscar-sfp";     -- From user input
    Use_Startup_Gen                : constant Boolean := False;               -- From user input
    Vendor                         : constant String  := "Nordic";            -- From board definition
 end ADL_Config;

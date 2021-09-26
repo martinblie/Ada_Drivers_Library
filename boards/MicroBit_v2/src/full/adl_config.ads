@@ -16,6 +16,6 @@ package ADL_Config is
    Runtime_Name                   : constant String  := "ravenscar-full-nrf52833";   -- From user input
    Runtime_Name_Suffix            : constant String  := "cortex-m4f";        -- From board definition
    Runtime_Profile                : constant String  := "ravenscar-full-nrf52833";     -- From user input
-   Use_Startup_Gen                : constant Boolean := False;               -- From user input
+   Use_Startup_Gen                : constant Boolean := False; -- From user input
    Vendor                         : constant String  := "Nordic";            -- From board definition
 end ADL_Config;

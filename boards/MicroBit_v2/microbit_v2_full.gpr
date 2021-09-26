@@ -215,6 +215,7 @@ library project MicroBit_v2_FULL is
    CPU_Core                       := "ARM Cortex-M4F";    -- From mcu definition
    Device_Family                  := "nRF52";             -- From board definition
    Device_Name                    := "nRF52833xxAA";      -- From board definition
+   Has_Custom_Memory_Area_1       := "False";             -- From default value
    Has_Ravenscar_Full_Runtime     := "True";              -- From board definition
    Has_Ravenscar_SFP_Runtime      := "True";              -- From board definition
    Has_ZFP_Runtime                := "True";              -- From board definition
@@ -223,8 +224,8 @@ library project MicroBit_v2_FULL is
    Max_Path_Length                := "1024";              -- From user input
    Number_Of_Interrupts           := "128";               -- From MCU definition
    Runtime_Name                   := "ravenscar-full-nrf52833";  -- From user input
-   Runtime_Name_Suffix            := "cortex-m4f";        -- From board definition
-   Runtime_Profile                := "ravenscar-full-nrf52833";    -- From user input
+   Runtime_Name_Suffix            := "nrf52833";        -- From board definition
+   Runtime_Profile                := "ravenscar-full";    -- From user input
    Use_Startup_Gen                := "False";             -- From user input
    Vendor                         := "Nordic";            -- From board definition
 

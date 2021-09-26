@@ -60,9 +60,10 @@ library project MicroBit_v2_SFP is
    for Library_Kind use "static";
    for Library_Name use "ada_drivers_library";
 
+   --Linker_Switches := ("-T", Project'Project_dir & "/src/zfp/link.ld");
    Linker_Switches := ();
    for Target use "arm-eabi";
-   for Runtime ("Ada") use "microbit_v2_sfp";
+   for Runtime ("Ada") use "ravenscar-sfp-nrf52833";
 
    package Device_Configuration is
       for CPU_Name use "ARM Cortex-M4F";
@@ -215,6 +216,7 @@ library project MicroBit_v2_SFP is
    CPU_Core                       := "ARM Cortex-M4F";    -- From mcu definition
    Device_Family                  := "nRF52";             -- From board definition
    Device_Name                    := "nRF52833xxAA";      -- From board definition
+   Has_Custom_Memory_Area_1       := "False";             -- From default value
    Has_Ravenscar_Full_Runtime     := "True";              -- From board definition
    Has_Ravenscar_SFP_Runtime      := "True";              -- From board definition
    Has_ZFP_Runtime                := "True";              -- From board definition
@@ -222,9 +224,9 @@ library project MicroBit_v2_SFP is
    Max_Mount_Points               := "2";                 -- From user input
    Max_Path_Length                := "1024";              -- From user input
    Number_Of_Interrupts           := "128";               -- From MCU definition
-   Runtime_Name                   := "microbit_v2_sfp";   -- From user input
-   Runtime_Name_Suffix            := "cortex-m4f";        -- From board definition
-   Runtime_Profile                := "ravenscar-sfp";     -- From user input
+   Runtime_Name                   := "ravenscar-sfp-nrf52833";   -- From user input
+   Runtime_Name_Suffix            := "nrf52833";        -- From board definition
+   Runtime_Profile                := "ravenscar-sfp"; -- From user input
    Use_Startup_Gen                := "False";             -- From user input
    Vendor                         := "Nordic";            -- From board definition
 
