@@ -1,6 +1,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Real_Time; use Ada.Real_Time;
-with Display; use Display;
+with MicroBit.DisplayRT; use MicroBit.DisplayRT;
 
 procedure Main is
 begin
