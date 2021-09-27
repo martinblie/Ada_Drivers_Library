@@ -16,14 +16,14 @@ package body Brain is
       StartTimer := Ada.Execution_Time.Clock;
 
       Time_Now := Ada.Real_Time.Clock;
-      delay until Time_Now + Ada.Real_Time.Milliseconds(1000); --some time to startup
+      delay until Time_Now + Ada.Real_Time.Milliseconds(1000); --some time to startup to allow eg. a sensor or servo to stabilize
 
       loop
          Time_Now := Ada.Real_Time.Clock;
 
          Put_Line ("Sensing...");
-
-         delay until Time_Now + Ada.Real_Time.Milliseconds(500);
+         delay 0.01; -- Set C = 10 ms
+         delay until Time_Now + Ada.Real_Time.Milliseconds(200);
 
          --Only for calculating schedule--
          if DoOnce = False then
@@ -41,8 +41,8 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-           Put_Line ("Thinking...");
-
+         Put_Line ("Thinking...");
+         delay 0.01; -- Set C = 10 ms
          delay until Time_Now + Ada.Real_Time.Milliseconds(200);
       end loop;
    end Think;
@@ -54,8 +54,8 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-           Put_Line ("Acting...");
-
+         Put_Line ("Acting...");
+         delay 0.01; -- Set C = 10 ms
          delay until Time_Now + Ada.Real_Time.Milliseconds(200);
       end loop;
    end Act;
