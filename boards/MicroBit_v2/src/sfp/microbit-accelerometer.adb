@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                    Copyright (C) 2017-2020, AdaCore                      --
+--                    Copyright (C) 2018-2019, AdaCore                      --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -29,112 +29,34 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with nRF.GPIO;    use nRF.GPIO;
-with MicroBit.Time; use MicroBit.Time;
+with MicroBit.I2C;
 
-package body MicroBit.Buttons is
+package body MicroBit.Accelerometer is
 
-   type Button_State_Array is array (Button_Id) of Button_State;
-   Points : constant array (Button_Id) of GPIO_Point := (MB_BTN_A, MB_BTN_B, MB_TOUCH);
-   States : Button_State_Array := (others => Released);
-   Subscribers : array (1 .. 10) of Button_Callback := (others => null);
+   Acc  : LSM303AGR.LSM303AGR_Accelerometer (MicroBit.I2C.Controller);
 
    procedure Initialize;
-   procedure Tick_Handler;
 
    ----------------
    -- Initialize --
    ----------------
 
    procedure Initialize is
-      Conf : GPIO_Configuration;
    begin
-      Conf.Mode         := Mode_In;
-      Conf.Resistors    := No_Pull;
-      Conf.Input_Buffer := Input_Buffer_Connect;
-      Conf.Sense        := Sense_Disabled;
-
-      for Pt of Points loop
-         Pt.Configure_IO (Conf);
-      end loop;
-
-      if not Tick_Subscribe (Tick_Handler'Access) then
-         raise Program_Error;
+      if not MicroBit.I2C.Initialized then
+         MicroBit.I2C.Initialize;
       end if;
 
+      Acc.Configure (LSM303AGR.Freq_400);
    end Initialize;
 
-   ------------------
-   -- Tick_Handler --
-   ------------------
+   ----------
+   -- Data --
+   ----------
 
-   procedure Tick_Handler is
-      Prev_States : constant Button_State_Array := States;
-   begin
-      --  Update all components of States array
-
-      for Id in Button_Id loop
-         if not Set (Points (Id)) then
-            States (Id) := Pressed;
-         else
-            States (Id) := Released;
-         end if;
-      end loop;
-
-      --  Notify changes to subscribers
-
-      for Id in Button_Id loop
-         if States (Id) /= Prev_States (Id) then
-            for Sub of Subscribers loop
-
-               if Sub /= null then
-                  Sub.all (Id, States (Id));
-               end if;
-            end loop;
-         end if;
-      end loop;
-   end Tick_Handler;
-
-   -----------
-   -- State --
-   -----------
-
-   function State (Button : Button_Id) return Button_State is
-   begin
-      return States (Button);
-   end State;
-
-   ---------------
-   -- Subscribe --
-   ---------------
-
-   function Subscribe (Callback : not null Button_Callback) return Boolean is
-   begin
-      for Subs of Subscribers loop
-         if Subs = null then
-            Subs := Callback;
-            return True;
-         end if;
-      end loop;
-
-      return False;
-   end Subscribe;
-
-   -----------------
-   -- Unsubscribe --
-   -----------------
-
-   function Unsubscribe (Callback : not null Button_Callback) return Boolean is
-   begin
-      for Subs of Subscribers loop
-         if Subs = Callback then
-            Subs := null;
-            return True;
-         end if;
-      end loop;
-      return False;
-   end Unsubscribe;
+   function Data return LSM303AGR.All_Axes_Data
+   is (Acc.Read_Accelerometer);
 
 begin
    Initialize;
-end MicroBit.Buttons;
+end MicroBit.Accelerometer;

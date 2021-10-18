@@ -28,28 +28,26 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Console; use MicroBit.Console;
-
-with MicroBit.Display;
-with MicroBit.Display.Symbols;
+with Ada.Text_IO; use Ada.Text_IO;
+with MicroBit.DisplayRT;
+with MicroBit.DisplayRT.Symbols;
 with MicroBit.Buttons; use MicroBit.Buttons;
-use MicroBit;
+procedure Main is
 
 --this demo shows howto use the 2 buttons and the touch logo. Note that the logo is a little sensitive/erratic, sometimes touching back side for ground seems to be needed.
-procedure Main is
 begin
-   loop
+     loop
       if MicroBit.Buttons.State (Button_A) = Pressed then
-         MicroBit.Display.Display ('A');
+         MicroBit.DisplayRT.Display ('A');
          Put_Line ("Pressed A");
       elsif MicroBit.Buttons.State (Button_B) = Pressed then
-         MicroBit.Display.Display ('B');
+         MicroBit.DisplayRT.Display ('B');
          Put_Line ("Pressed B");
       elsif MicroBit.Buttons.State (Logo) = Pressed then
-         Display.Symbols.Heart;
+         Microbit.DisplayRT.Symbols.Heart;
          Put_Line ("Pressed L");
       else
-         MicroBit.Display.Clear;
+         MicroBit.DisplayRT.Clear;
       end if;
-   end loop;
+       end loop;
 end Main;

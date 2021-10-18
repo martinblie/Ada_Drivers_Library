@@ -1,8 +1,8 @@
-with "..\..\..\..\boards\MicroBit_v2\microbit_v2_sfp.gpr";
+with "..\..\..\..\boards\MicroBit_v2\microbit_v2_full.gpr";
 
 project Text_scrolling is
 
-   for Runtime ("ada") use "ravenscar-sfp-nrf52833";
+   for Runtime ("ada") use "ravenscar-full-nrf52833";
    for Target use "arm-eabi";
    for Main use ("main.adb");
    for Languages use ("Ada");

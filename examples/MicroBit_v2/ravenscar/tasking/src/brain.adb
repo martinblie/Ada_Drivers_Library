@@ -14,24 +14,9 @@ package body Brain is
       --Only for calculating schedule--
       --Should start at 0 when task is created, and increase only when used by CPU
       StartTimer := Ada.Execution_Time.Clock;
-
-      Time_Now := Ada.Real_Time.Clock;
-      delay until Time_Now + Ada.Real_Time.Milliseconds(1000); --some time to startup to allow eg. a sensor or servo to stabilize
-
-      loop
-         Time_Now := Ada.Real_Time.Clock;
-
-         Put_Line ("Sensing...");
-         delay 0.01; -- Set C = 10 ms
-         delay until Time_Now + Ada.Real_Time.Milliseconds(200);
-
-         --Only for calculating schedule--
-         if DoOnce = False then
-            DoOnce := True;
-            EndTimer := Ada.Execution_Time.Clock;
-            Put_Line("Clock:" & EndTimer'Img);
-         end if;
-      end loop;
+      delay 1.0; --some time to startup to allow eg. a sensor or servo to stabilize
+      EndTimer := Ada.Execution_Time.Clock;
+      Put_Line("Clock end1:" & EndTimer'Img);
    end Sense;
 
    task body Think is
@@ -41,7 +26,7 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-         Put_Line ("Thinking...");
+         --Put_Line ("Thinking...");
          delay 0.01; -- Set C = 10 ms
          delay until Time_Now + Ada.Real_Time.Milliseconds(200);
       end loop;
@@ -54,9 +39,9 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-         Put_Line ("Acting...");
+         --Put_Line ("Acting...");
          delay 0.01; -- Set C = 10 ms
-         delay until Time_Now + Ada.Real_Time.Milliseconds(200);
+         delay until Time_Now + Ada.Real_Time.Milliseconds(200); -- Set T = 200 ms
       end loop;
    end Act;
 

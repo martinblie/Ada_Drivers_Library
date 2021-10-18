@@ -29,28 +29,28 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 with MicroBit.Console; use MicroBit.Console;
-with MicroBit.IOs;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 with Ada.Real_Time; use Ada.Real_Time;
 
 procedure Main is
 begin
-	  MicroBit.IOs.Set_Analog_Period_Us(20_000);
+	  Set_Analog_Period_Us(20_000);
     loop
 
 	  --  This generates a PWM signal without the servo library
-      --  Loop for value between 30 and 100. Note that this range is not checking boundaries, 1023 is the max.
+     --  Loop for value between 30 and 100. Note that this range is not checking boundaries, 1023 is the max.
 	  --  When using with a servo, this first sets the interval period (20ms=50Hz), and the dutycycle to 30/1023 = 2.9% to 9.75%
 	  --  The spec says duty cycle is 0.5 ms/20ms = 2.5%  (-90 degree) 
 	  --                              1.5 ms/20ms = 7.5% ( 0 degree) 
 	  --                              2.5 ms/20ms = 12.5% ( +90 degree) 
 	  -- https://components101.com/motors/mg995-servo-motor
 	  
-      for Value in MicroBit.IOs.Analog_Value range 30 .. 100 loop
-		 MicroBit.Console.Put("Value: ");
+      for Value in Analog_Value range 30 .. 100 loop
+		   MicroBit.Console.Put("Value: ");
          MicroBit.Console.Put_Line(Integer'Image(Integer(Value)));
 
          --  Write the analog value to pin 0
-         --MicroBit.IOs.Write (0, Value);
+         Write (0, Value);
 
          --  Wait 20 milliseconds
          delay until Clock + Milliseconds(20);

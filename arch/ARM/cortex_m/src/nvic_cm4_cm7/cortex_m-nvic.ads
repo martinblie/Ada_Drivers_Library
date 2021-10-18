@@ -47,7 +47,7 @@ with HAL;            use HAL;
 
 package Cortex_M.NVIC is  -- the Nested Vectored Interrupt Controller
 
-   type Interrupt_ID is new Natural range 0 .. 240;
+   type Interrupt_ID is new Natural range 0 .. 248; --reserve 3 bits for priorities
    type Interrupt_Priority is new UInt32;
 
    --  0 bits for pre-emption priority;  4 bits for subpriority
@@ -251,7 +251,8 @@ private
    SCB_AIRCR_SYSRESETREQ_Mask : constant UInt32 :=
      Shift_Left (1, SCB_AIRCR_SYSRESETREQ_Pos);
 
-   NVIC_PRIO_BITS : constant := 4;
+   NVIC_PRIO_BITS : constant := 3;
    --  STM32F4XX uses 4 bits for the priority levels
+   --  NRF52833  uses 3 bits
 
 end Cortex_M.NVIC;

@@ -29,6 +29,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+
 with nRF.Clock;
 with nRF.Device;        use nRF.Device;
 with nRF.RTC;           use nRF.RTC;
@@ -58,7 +59,6 @@ package body MicroBit.Time is
       if not Clocks.Low_Freq_Running then
          Clocks.Set_Low_Freq_Source (Clocks.LFCLK_SYNTH);
          Clocks.Start_Low_Freq;
-
          loop
             exit when Clocks.Low_Freq_Running;
          end loop;
@@ -69,15 +69,17 @@ package body MicroBit.Time is
       --  1kHz
       Set_Prescaler (RTC_1, 0);
       Set_Compare (RTC_1, 0, 32);
-
+      --
       Enable_Event (RTC_1, Compare_0_Event);
+
+      --nRF.Interrupts.Register (nRF.Interrupts.RTC1_Interrupt,
+      --                        RTC1_IRQHandler'Access);
 
       nRF.Events.Enable_Interrupt (nRF.Events.RTC_1_COMPARE_0);
 
-      nRF.Interrupts.Register (nRF.Interrupts.RTC1_Interrupt,
-                                 RTC1_IRQHandler'Access);
 
       nRF.Interrupts.Enable (nRF.Interrupts.RTC1_Interrupt);
+
 
       Start (RTC_1);
    end Initialize;
@@ -132,8 +134,10 @@ package body MicroBit.Time is
       Wakeup_Time : constant UInt64 := Clock + Milliseconds;
    begin
       while Wakeup_Time > Clock loop
-         Asm (Template => "wfi", -- Wait for interrupt
-              Volatile => True);
+         --  Asm (Template => "wfi", -- Wait for interrupt, note that this is a blocking call as the CPU will halt all execution
+         --                          -- Using WFI saves power: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Wait-For-Interrupt?lang=en
+         --       Volatile => True);
+         null;
       end loop;
    end Delay_Ms;
 

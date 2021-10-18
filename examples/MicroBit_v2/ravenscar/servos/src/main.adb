@@ -30,11 +30,11 @@
 ------------------------------------------------------------------------------
 
 with MicroBit.Console; use MicroBit.Console;
-with MicroBit.Display; use MicroBit.Display;
-with MicroBit.IOs; use MicroBit.IOs;
+with MicroBit.DisplayRT; use MicroBit.DisplayRT;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 with MicroBit.Servos; use MicroBit.Servos;
 with MicroBit.Buttons; use MicroBit.Buttons;
-with MicroBit.Time; use MicroBit.Time;
+with MicroBit.TimeWithRTC1; use MicroBit.TimeWithRTC1;
 
 procedure Main is
 
