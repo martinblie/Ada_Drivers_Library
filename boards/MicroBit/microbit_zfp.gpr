@@ -60,9 +60,10 @@ library project MicroBit_ZFP is
    for Library_Kind use "static";
    for Library_Name use "ada_drivers_library";
 
-   Linker_Switches := ("-T", Project'Project_dir & "/src/zfp/link.ld");
+   Linker_Switches := ("-T", Project'Project_dir & "/src/zfp/link.ld"); --oring
+   --Linker_Switches := (); --test
    for Target use "arm-eabi";
-   for Runtime ("Ada") use "zfp-cortex-m0";
+   for Runtime ("Ada") use "zfp-microbit"; --test was cortex-m0
 
    package Device_Configuration is
       for CPU_Name use "ARM Cortex-M0";
@@ -127,8 +128,8 @@ library project MicroBit_ZFP is
    Max_Mount_Points               := "2";                 -- From default value
    Max_Path_Length                := "1024";              -- From default value
    Number_Of_Interrupts           := "32";                -- From MCU definition
-   Runtime_Name                   := "zfp-cortex-m0";     -- From default value
-   Runtime_Name_Suffix            := "cortex-m0";         -- From board definition
+   Runtime_Name                   := "zfp-microbit";      -- From default value
+   Runtime_Name_Suffix            := "microbit";          -- From board definition
    Runtime_Profile                := "zfp";               -- From command line
    Use_Startup_Gen                := "True";              -- From command line
    Vendor                         := "Nordic";            -- From board definition
@@ -156,5 +157,5 @@ library project MicroBit_ZFP is
     Src_Dirs_Root & "/middleware/src/sdmmc", -- From middleware config
     Src_Dirs_Root & "/middleware/src/neopixel", -- From middleware config
     Src_Dirs_Root & "/components/src/**", -- From components config
-     "src/zfp/");
+    "src/zfp/");
 end MicroBit_ZFP;

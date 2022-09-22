@@ -29,23 +29,31 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with MicroBit.IOs;
+with MicroBit.IOs; use MicroBit.IOs;
 with MicroBit.Time;
 
---The classical blinking demo demonstrating switching pin 0 high and low in .5 sec interval
 procedure Main is
+   pin1 : constant Pin_Id := 1;
+   pinIsActive : Boolean := False;
+
 begin
-  loop
-      --  Turn on the LED connected to pin 0
-      MicroBit.IOs.Set (0, True);
+     -- write micro:bit v2 pin 1 to high
+     -- The API is horrible. Set(pin) for reading and Set(pin,value) for writing
+     -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value)
+     Set (pin1, True);
+
+     --  Wait 1000 milliseconds
+     MicroBit.Time.Delay_Ms (1000);
+
+   loop
+      -- Toggle between True and False, making pin1 high and low
+      pinIsActive := not pinIsActive;
+
+      --Write to pin1
+      Set (pin1, pinIsActive);
 
       --  Wait 500 milliseconds
       MicroBit.Time.Delay_Ms (500);
 
-      --  Turn off the LED connected to pin 0
-      MicroBit.IOs.Set (0, False);
-
-      --  Wait 500 milliseconds
-      MicroBit.Time.Delay_Ms (500);
    end loop;
 end Main;

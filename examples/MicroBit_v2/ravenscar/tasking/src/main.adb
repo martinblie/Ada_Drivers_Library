@@ -1,6 +1,6 @@
 --pragma Task_Dispatching_Policy(FIFO_Within_Priorities);
---pragma Locking Policy (Ceiling_Locking):
---pragma Profile(JORVIK); these pragma's are already active
+--pragma Locking_Policy (Ceiling_Locking);
+--pragma Profile(JORVIK); --these pragma's are already active
 
 
 --based on: https://learn.adacore.com/courses/intro-to-ada/chapters/tasking.html#simple-task

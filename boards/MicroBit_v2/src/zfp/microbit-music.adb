@@ -47,7 +47,7 @@ package body MicroBit.Music is
       else
 
          --  Enable PWM with a 50% duty cycle
-         Write (Pin, 128); --512 =50%, but https://github.com/bbcmicrobit/micropython/blob/master/source/microbit/modmusic.cpp use 128?
+         Write (Pin, 800); --512 =50%, but https://github.com/bbcmicrobit/micropython/blob/master/source/microbit/modmusic.cpp use 128?
 
          --  Set the period corresponding to the required pitch
          Set_Analog_Period_Us (1_000_000 / Natural (P));

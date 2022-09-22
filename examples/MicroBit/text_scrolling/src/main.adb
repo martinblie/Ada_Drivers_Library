@@ -26,15 +26,45 @@
 --   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT    --
 --   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  --
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
---                                                                          --
+--
 ------------------------------------------------------------------------------
-
-with MicroBit.Display;
-
+--with MicroBit.Display;
+with MicroBit.IOs;
+--with MicroBit.Time;
 procedure Main is
 begin
-
    loop
-      MicroBit.Display.Display ("Make with Ada!  ");
+      --  Turn on the LED connected to pin 0
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      MicroBit.IOs.Set (2, True);
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      null;
+      --  Wait 500 milliseconds
+      --MicroBit.Time.Delay_Ms (500);
+
+      --  Turn off the LED connected to pin 0
+      MicroBit.IOs.Set (2, False);
+
+      --  Wait 500 milliseconds
+      --MicroBit.Time.Delay_Ms (500);
+      --null;
+      --MicroBit.Display.Display ("Make with Ada!  ");                                                      --
    end loop;
 end Main;

@@ -29,83 +29,67 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with MicroBit.Console; use MicroBit.Console;
-with MicroBit.Display; use MicroBit.Display;
-with MicroBit.IOs; use MicroBit.IOs;
-with MicroBit.Servos; use MicroBit.Servos;
+with MicroBit.IOs;     use MicroBit.IOs;
+with MicroBit.Servos;  use MicroBit.Servos;
 with MicroBit.Buttons; use MicroBit.Buttons;
-with MicroBit.Time; use MicroBit.Time;
+with MicroBit.Time;    use MicroBit.Time;
 
 procedure Main is
 
+   -- define the micro:bit v2 pins where 2 servo's are attached. In Microbit-servos it is checked if these are analog pins!
    subtype Servo_Pin_Id is Pin_Id range 1 .. 2;
+
+   -- create a Servo_Pin_Array struct with embedded function Active to set the target angle of rotation
    type Servo_Pin_State (Active : Boolean := False) is record
       case Active is
-         when True => Setpoint : Servo_Set_Point;
-         when False => null;
+         when True =>
+            Setpoint : Servo_Set_Point;
+         when False =>
+            null;
       end case;
    end record;
    type Servo_Pin_Array is array (Servo_Pin_Id) of Servo_Pin_State;
 
-   Servo_Pins, Cur_Servo_Pins : Servo_Pin_Array := (others => (Active => False));
-   Code : Character := ' ';
-   Button_AB : Boolean;
-   Starting : Boolean := False;
+   -- initialize all servo pins to have no PWM signal.
+   Servo_Pins : Servo_Pin_Array := (others => (Active => False));
+
 begin
-   Put_Line ("Start");
-
    loop
-      --  Update PWM pulse size
 
-      if Starting or else Cur_Servo_Pins /= Servo_Pins then
-         Starting := False;
-         Clear;
-         Display (Code);
-         for J in Servo_Pins'Range loop
-            if Servo_Pins (J).Active then
-               Go (J, Servo_Pins (J).Setpoint);
-            else
-               Stop (J);
-            end if;
-         end loop;
-         Cur_Servo_Pins := Servo_Pins;
-      end if;
+      --  For all servo pins
+      for J in Servo_Pins'Range loop
+
+         -- If the servo is activated
+         if Servo_Pins (J).Active then
+
+            -- Library call to microbit-servos to set the duty cycle on a pin. Compare with the analog out example!
+            Go (J, Servo_Pins (J).Setpoint);
+         else
+            -- Library call to microbit-servos to set the duty cycle to zero.
+            Stop (J);
+
+         end if;
+      end loop;
 
       --  Check buttons
-
-      if State (Button_A) = Released and then State (Button_B) = Released then
-         --  Reset double press latch
-
-         Button_AB := False;
-
-      elsif State (Button_A) = Pressed and then State (Button_B) = Pressed then
+      -- If both buttons A and B are pressed, deactivate both servos. It is important to have a stop function when working with motors.
+      if State (Button_A) = Pressed and then State (Button_B) = Pressed then
          Servo_Pins := (others => (Active => False));
-         Code := '0';
 
-         --  Latch double press mode so that when one button is released, we
-         --  ignore the other.
-
-         Button_AB := True;
-
-      elsif Button_AB then
-         --  After double press, ignore single button state until both buttons
-         --  are released.
-
-         null;
-
+         -- If button A is pressed, activate both and let them rotate opposite of eachother
       elsif State (Button_A) = Pressed then
-         Servo_Pins := (1 => (Active => True, Setpoint => 0),
-                        2 => (Active => True, Setpoint => 180));
-         Code := 'A';
-
+         Servo_Pins :=
+           (1 => (Active => True, Setpoint => 0),
+            2 => (Active => True, Setpoint => 180));
+         -- If button B is pressed, activate both and let them rotate opposite of eachother
       elsif State (Button_B) = Pressed then
-         Servo_Pins := (1 => (Active => True, Setpoint => 180),
-                        2 => (Active => True, Setpoint => 0));
-         Code := 'R';
+         Servo_Pins :=
+           (1 => (Active => True, Setpoint => 180),
+            2 => (Active => True, Setpoint => 0));
       end if;
 
-      --  Delay for at least 1 PWM frame
-
+      --  Delay for at least 1 PWM frame (50Hz, so 20ms)
       Delay_Ms (20);
+
    end loop;
 end Main;

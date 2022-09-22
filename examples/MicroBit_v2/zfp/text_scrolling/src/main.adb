@@ -28,10 +28,11 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Display;
+with MicroBit.Display; use MicroBit.Display;
 
 procedure Main is
 
 begin
-	MicroBit.Display.Display ("Make with Ada!  "); --note that this keeps looping!
+   --Note that this keeps looping! Explore the Set and Clear API in Microbit.Display to set and clear individual pixels
+   Display ("ADA");
 end Main;

@@ -28,25 +28,52 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
+with MicroBit.Radio;
+with nRF.Radio; use nRF.Radio;
 with MicroBit.Console; use MicroBit.Console;
+use MicroBit;
+with HAL; use HAL;
 with Ada.Real_Time; use Ada.Real_Time;
-with MicroBit.IOs;
 
 procedure Main is
 
-   Value : MicroBit.IOs.Analog_Value;
+   data : access nRF.Radio.Framebuffer;
+   queue: Boolean;
+
 begin
+   -- enable the micro:bit radio using default settings like channel, speed, power, protocol, etc.
+   Put(Boolean'Image(Radio.IsEnabled));
+   Radio.Enable;
+   Put(Radio_State'Image(Radio.Status));
 
-   --  Loop forever
    loop
+      queue := Radio.DataReady;
+      Put("-");
+      delay(0.5);
 
-      --  Read analog value of microbit pin 1
-      Value := MicroBit.IOs.Analog (1);
+      -- check if the buffer is not empty, print the received data to the serial monitor
+      if Radio.DataReady then
+          Put("got data");
+         --copy the receive buffer of the radio
+          data := Radio.Receive;
 
-      --  Write analog value of microbit pin 0
-      --MicroBit.IOs.Write (0, Value);
-	  
-	  MicroBit.Console.Put(Integer'Image(Integer(Value)));
-	  delay until Clock + Milliseconds(100);
+         --the header information.
+          Put(UInt8'Image(data.Length));
+          Put("  ");
+          Put(UInt8'Image(data.Version));
+          Put("  ");
+          Put(UInt8'Image(data.Group));
+          Put("  ");
+          Put(UInt8'Image(data.Protocol));
+          Put("  ");
+
+         --The actual data. note we only print the 1st byte of data, there could be more.
+         Put_Line(UInt8'Image(data.Payload(1)));
+
+         --is this needed?
+         --deallocate (free) the data as it will be dangling after the  next assignment.
+         --Destroy (data);
+       end if;
    end loop;
 end Main;
+

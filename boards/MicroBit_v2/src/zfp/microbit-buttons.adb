@@ -58,7 +58,7 @@ package body MicroBit.Buttons is
          Pt.Configure_IO (Conf);
       end loop;
 
-      if not Timer.Tick_Subscribe (Tick_Handler'Access) then
+      if not Tick_Subscribe (Tick_Handler'Access) then
          raise Program_Error;
       end if;
 

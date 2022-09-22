@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                       Copyright (C) 2021, AdaCore                        --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -28,57 +28,34 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
-with LSM303AGR; use LSM303AGR;
-
-with MicroBit.Display;
-with MicroBit.Display.Symbols;
-with MicroBit.Accelerometer;
-with MicroBit.Console;
-with MicroBit.Time;
-
+with MicroBit.Radio;
+--with nRF.Radio; --we need to refactor a bit more so we dont need this reference
+--with MicroBit.Console; use MicroBit.Console;
+--with MicroBit.Time; use MicroBit.Time;
 use MicroBit;
-
+--with HAL; use HAL;
 
 procedure Main is
-  Data: All_Axes_Data;
-  Threshold : constant := 150;
 
+--   data : nRF.Radio.Framebuffer;
 begin
-   Console.Put_Line ("Begin");
+
+   Radio.Enable;
+   Radio.SetHeader(6,12,1,14);
+   Radio.StartReceiving;
+
    loop
-
-      --  --  Read the accelerometer data
-      Data := Accelerometer.Data;
-
-      --  Print the data on the serial port
-      Console.Put_Line ("X:" & Data.X'Img & ASCII.HT &
-                        "Y:" & Data.Y'Img & ASCII.HT &
-                        "Z:" & Data.Z'Img);
-
-      --  Clear the LED matrix
-      Display.Clear;
-
-      --  Draw a symbol on the LED matrix depending on the orientation of the
-      --  micro:bit.
-      if Data.X > Threshold then
-         Display.Symbols.Left_Arrow;
-
-      elsif Data.X < -Threshold then
-         Display.Symbols.Right_Arrow;
-
-      elsif Data.Y > Threshold then
-         Display.Symbols.Up_Arrow;
-
-      elsif Data.Y < -Threshold then
-         Display.Symbols.Down_Arrow;
-
-      else
-         Display.Symbols.Heart;
-
+     --Delay_Ms(5000);
+      -- check if the buffer is not empty, print the received data to the serial monitor
+      if Radio.DataReady then
+         --data :=Radio.Receive;
+        null;
+         --  Put_Line("L : " & UInt8'Image(data.Length));
+         --  Put_Line("V : " & UInt8'Image(data.Version));
+         --  Put_Line("G : " & UInt8'Image(data.Group));
+         --  Put_Line("P : " & UInt8'Image(data.Protocol));
+         --  Put_Line("D0: " & UInt8'Image(data.Payload(1)));
+         --  Put_Line("D1: " & UInt8'Image(data.Payload(2)));
       end if;
-
-      --  Do nothing for 100 milliseconds
-      Time.Sleep (100);
    end loop;
 end Main;

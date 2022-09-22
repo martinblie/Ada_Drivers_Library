@@ -31,7 +31,7 @@
 
 package nRF.GPIO.Tasks_And_Events is
 
-   type GPIOTE_Channel is range 0 .. 3;
+   type GPIOTE_Channel is range 0 .. 7;
 
    procedure Disable (Chan : GPIOTE_Channel);
 

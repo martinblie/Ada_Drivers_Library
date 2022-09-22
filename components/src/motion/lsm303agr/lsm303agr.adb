@@ -59,6 +59,15 @@ package body LSM303AGR is
 
       This.Write_Register
         (Accelerometer_Address, CTRL_REG1_A, To_UInt8 (CTRLA));
+
+      --  CTRLA.Xen  := 0;
+      --  CTRLA.Yen  := 0;
+      --  CTRLA.Zen  := 0;
+      --  CTRLA.LPen := 0;
+      --  CTRLA.ODR  := 0;
+      --
+      --  This.Write_Register
+      --    (Magnetometer_Address, CFG_REG_A_M, To_UInt8 (CTRLA));
    end Configure;
 
    procedure Assert_Status (Status : I2C_Status);
@@ -179,6 +188,42 @@ package body LSM303AGR is
 
       return AxisData;
    end Read_Accelerometer;
+
+   function Read_Magnetometer
+     (This : LSM303AGR_Accelerometer) return All_Axes_Data
+   is
+      -------------
+      -- Convert --
+      -------------
+      function Convert (Low, High : UInt8) return Axis_Data;
+      function Convert (Low, High : UInt8) return Axis_Data is
+         Tmp : UInt10;
+      begin
+          -- TODO: support HiRes and LoPow modes
+          -- in conversion.
+         Tmp := UInt10 (Shift_Right (Low, 6));
+         Tmp := Tmp or UInt10 (High) * 2**2;
+         return To_Axis_Data (Tmp);
+      end Convert;
+
+      Status   : I2C_Status;
+      Data     : I2C_Data (1 .. 6) := (others => 0);
+      AxisData : All_Axes_Data     := (X => 0, Y => 0, Z => 0);
+   begin
+      This.Port.Mem_Read
+        (Addr          => Magnetometer_Address,
+         Mem_Addr      => To_Multi_Byte_Read_Address (OUT_X_L_REG_M),
+         Mem_Addr_Size => Memory_Size_8b, Data => Data, Status => Status);
+      Assert_Status (Status);
+
+       -- LSM303AGR has its X-axis in the opposite direction
+       -- of the MMA8653FCR1 sensor.
+      AxisData.X := Convert (Data (1), Data (2)) * Axis_Data (-1);
+      AxisData.Y := Convert (Data (3), Data (4));
+      AxisData.Z := Convert (Data (5), Data (6));
+
+      return AxisData;
+   end Read_Magnetometer;
 
    function To_Multi_Byte_Read_Address
      (Register_Addr : Register_Address) return UInt16

@@ -54,8 +54,11 @@ package body MicroBit.Accelerometer is
    -- Data --
    ----------
 
-   function Data return LSM303AGR.All_Axes_Data
+   function AccelData return LSM303AGR.All_Axes_Data
    is (Acc.Read_Accelerometer);
+
+   function MagData return LSM303AGR.All_Axes_Data
+   is (Acc.Read_Magnetometer);
 
 begin
    Initialize;

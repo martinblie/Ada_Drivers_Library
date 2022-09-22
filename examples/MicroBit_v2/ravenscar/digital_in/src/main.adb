@@ -29,7 +29,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with MicroBit.IOs;
+with MicroBit.IOsForTasking;
 
 procedure Main is
 begin
@@ -38,14 +38,14 @@ begin
    loop
 
       --  Check if pin 1 is high
-      if MicroBit.IOs.Set (1) then
+      if MicroBit.IOsForTasking.Set (1) then
 
          --  Turn off the LED connected to pin 0
-         MicroBit.IOs.Set (0, False);
+         MicroBit.IOsForTasking.Set (0, False);
       else
 
          --  Turn on the LED connected to pin 0
-         MicroBit.IOs.Set (0, True);
+         MicroBit.IOsForTasking.Set (0, True);
       end if;
    end loop;
 end Main;

@@ -34,6 +34,7 @@ with nRF.GPIO;           use nRF.GPIO;
 with nRF.Device;         use nRF.Device;
 with Ada.Real_Time;  use Ada.Real_Time;
 with Generic_Timers;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package body MicroBit.DisplayRT is
 
@@ -821,6 +822,27 @@ package body MicroBit.DisplayRT is
    function Animation_In_Progress return Boolean
    is (Animation_State /= None);
 
+
+   function ConvertMatrixToMessage return String
+   is
+     Temp_Message: Unbounded_String;
+     Index : Integer :=0;
+
+
+   begin
+      Append(Temp_Message, "LED;");
+
+       for X in Coord loop
+         for Y in Coord loop
+            Append(Temp_Message, Integer'Image(Index)& ",");
+            Append(Temp_Message, Boolean'Image(Bitmap(X,Y)) & ";");
+
+            Index := Index +1;
+         end loop;
+       end loop;
+
+      return To_String(Temp_Message);
+   end ConvertMatrixToMessage;
 
     --------------
    -- Put_Char --

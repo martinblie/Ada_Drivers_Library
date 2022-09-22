@@ -40,207 +40,211 @@
 --
 
 with Bit_Fields; use Bit_Fields;
-
+--with MicroBit.Console;
+with MicroBit.Console; use MicroBit.Console;
+--with MicroBit.Time; use MicroBit.Time;
+--with MicroBit.TimeWithRTC1; use MicroBit.TimeWithRTC1;
+with MicroBit;
 package body OV2640 is
 
-   type Addr_And_Data is record
-      Addr, Data : UInt8;
-   end record;
+   --  type Addr_And_Data is record
+   --     Addr, Data : UInt8;
+   --  end record;
 
-   type Command_Array is array (Natural range <>) of Addr_And_Data;
+  -- type Command_Array is array (Natural range <>) of Addr_And_Data;
 
-   Setup_Commands : constant Command_Array :=
-     ((REG_BANK_SELECT, SELECT_DSP),
-      (16#2c#,     16#ff#),
-      (16#2e#,     16#df#),
-      (REG_BANK_SELECT, SELECT_SENSOR),
-      (16#3c#,     16#32#),
-      (REG_SENSOR_CLKRC,    16#80#), --  Set PCLK divider */
-
-      --  COM2_OUT_DRIVE_3x
-      (REG_SENSOR_COM2,     16#02#), --  Output drive x3 */
-      --  #ifdef OPENMV2
-      (REG_SENSOR_REG04,    16#F8#), --  Mirror/VFLIP/AEC[1:0] */
-      --  #else
-      --      (REG04_SET(REG04_HREF_EN)),
-      --  #endif
-      (REG_SENSOR_COM8,     COM8_DEFAULT or
-                            COM8_BNDF_EN or
-                            COM8_AGC_EN or
-                            COM8_AEC_EN),
-      --  COM9_AGC_GAIN_8x
-      (REG_SENSOR_COM9,     COM9_DEFAULT or Shift_Left (16#02#, 5)),
-      (16#2c#,     16#0c#),
-      (16#33#,     16#78#),
-      (16#3a#,     16#33#),
-      (16#3b#,     16#fb#),
-      (16#3e#,     16#00#),
-      (16#43#,     16#11#),
-      (16#16#,     16#10#),
-      (16#39#,     16#02#),
-      (16#35#,     16#88#),
-      (16#22#,     16#0a#),
-      (16#37#,     16#40#),
-      (16#23#,     16#00#),
-      (REG_SENSOR_ARCOM2,   16#a0#),
-      (16#06#,     16#02#),
-      (16#06#,     16#88#),
-      (16#07#,     16#c0#),
-      (16#0d#,     16#b7#),
-      (16#0e#,     16#01#),
-      (16#4c#,     16#00#),
-      (16#4a#,     16#81#),
-      (16#21#,     16#99#),
-      (REG_SENSOR_AEW,      16#40#),
-      (REG_SENSOR_AEB,      16#38#),
-      --  AGC/AEC fast mode operating region
-      --  VV_AGC_TH_SET(h,l) ((h<<4)|(l&0x0F))
-      --  VV_AGC_TH_SET(16#08#, 16#02#)
-      (REG_SENSOR_VV,       Shift_Left (16#08#, 4) or 16#02#),
-      (REG_SENSOR_COM19,    16#00#), --  Zoom control 2 MSBs */
-      (REG_SENSOR_ZOOMS,    16#00#), --  Zoom control 8 MSBs */
-      (16#5c#,     16#00#),
-      (16#63#,     16#00#),
-      (REG_SENSOR_FLL,      16#00#),
-      (REG_SENSOR_FLH,      16#00#),
-
-      --  Set banding filter
-      (REG_SENSOR_COM3,     COM3_DEFAULT or COM3_BAND_AUTO),
-      (REG_SENSOR_REG5D,    16#55#),
-      (REG_SENSOR_REG5E,    16#7d#),
-      (REG_SENSOR_REG5F,    16#7d#),
-      (REG_SENSOR_REG60,    16#55#),
-      (REG_SENSOR_HISTO_LOW,   16#70#),
-      (REG_SENSOR_HISTO_HIGH,  16#80#),
-      (16#7c#,     16#05#),
-      (16#20#,     16#80#),
-      (16#28#,     16#30#),
-      (16#6c#,     16#00#),
-      (16#6d#,     16#80#),
-      (16#6e#,     16#00#),
-      (16#70#,     16#02#),
-      (16#71#,     16#94#),
-      (16#73#,     16#c1#),
-      (16#3d#,     16#34#),
-      --  (COM7,   COM7_RES_UXGA | COM7_ZOOM_EN),
-      (16#5a#,     16#57#),
-      (REG_SENSOR_BD50,     16#bb#),
-      (REG_SENSOR_BD60,     16#9c#),
-
-      (REG_BANK_SELECT, SELECT_DSP),
-      (16#e5#,     16#7f#),
-      (REG_DSP_MC_BIST,  MC_BIST_RESET or MC_BIST_BOOT_ROM_SEL),
-      (16#41#,     16#24#),
-      (REG_DSP_RESET,    RESET_JPEG or RESET_DVP),
-      (16#76#,     16#ff#),
-      (16#33#,     16#a0#),
-      (16#42#,     16#20#),
-      (16#43#,     16#18#),
-      (16#4c#,     16#00#),
-      (REG_DSP_CTRL3,    CTRL3_BPC_EN or CTRL3_WPC_EN or 16#10#),
-      (16#88#,     16#3f#),
-      (16#d7#,     16#03#),
-      (16#d9#,     16#10#),
-      (REG_DSP_R_DVP_SP, R_DVP_SP_AUTO_MODE or 16#2#),
-      (16#c8#,     16#08#),
-      (16#c9#,     16#80#),
-      (REG_DSP_BPADDR,   16#00#),
-      (REG_DSP_BPDATA,   16#00#),
-      (REG_DSP_BPADDR,   16#03#),
-      (REG_DSP_BPDATA,   16#48#),
-      (REG_DSP_BPDATA,   16#48#),
-      (REG_DSP_BPADDR,   16#08#),
-      (REG_DSP_BPDATA,   16#20#),
-      (REG_DSP_BPDATA,   16#10#),
-      (REG_DSP_BPDATA,   16#0e#),
-      (16#90#,     16#00#),
-      (16#91#,     16#0e#),
-      (16#91#,     16#1a#),
-      (16#91#,     16#31#),
-      (16#91#,     16#5a#),
-      (16#91#,     16#69#),
-      (16#91#,     16#75#),
-      (16#91#,     16#7e#),
-      (16#91#,     16#88#),
-      (16#91#,     16#8f#),
-      (16#91#,     16#96#),
-      (16#91#,     16#a3#),
-      (16#91#,     16#af#),
-      (16#91#,     16#c4#),
-      (16#91#,     16#d7#),
-      (16#91#,     16#e8#),
-      (16#91#,     16#20#),
-      (16#92#,     16#00#),
-      (16#93#,     16#06#),
-      (16#93#,     16#e3#),
-      (16#93#,     16#03#),
-      (16#93#,     16#03#),
-      (16#93#,     16#00#),
-      (16#93#,     16#02#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#93#,     16#00#),
-      (16#96#,     16#00#),
-      (16#97#,     16#08#),
-      (16#97#,     16#19#),
-      (16#97#,     16#02#),
-      (16#97#,     16#0c#),
-      (16#97#,     16#24#),
-      (16#97#,     16#30#),
-      (16#97#,     16#28#),
-      (16#97#,     16#26#),
-      (16#97#,     16#02#),
-      (16#97#,     16#98#),
-      (16#97#,     16#80#),
-      (16#97#,     16#00#),
-      (16#97#,     16#00#),
-      (16#a4#,     16#00#),
-      (16#a8#,     16#00#),
-      (16#c5#,     16#11#),
-      (16#c6#,     16#51#),
-      (16#bf#,     16#80#),
-      (16#c7#,     16#10#),
-      (16#b6#,     16#66#),
-      (16#b8#,     16#A5#),
-      (16#b7#,     16#64#),
-      (16#b9#,     16#7C#),
-      (16#b3#,     16#af#),
-      (16#b4#,     16#97#),
-      (16#b5#,     16#FF#),
-      (16#b0#,     16#C5#),
-      (16#b1#,     16#94#),
-      (16#b2#,     16#0f#),
-      (16#c4#,     16#5c#),
-      (16#a6#,     16#00#),
-      (16#a7#,     16#20#),
-      (16#a7#,     16#d8#),
-      (16#a7#,     16#1b#),
-      (16#a7#,     16#31#),
-      (16#a7#,     16#00#),
-      (16#a7#,     16#18#),
-      (16#a7#,     16#20#),
-      (16#a7#,     16#d8#),
-      (16#a7#,     16#19#),
-      (16#a7#,     16#31#),
-      (16#a7#,     16#00#),
-      (16#a7#,     16#18#),
-      (16#a7#,     16#20#),
-      (16#a7#,     16#d8#),
-      (16#a7#,     16#19#),
-      (16#a7#,     16#31#),
-      (16#a7#,     16#00#),
-      (16#a7#,     16#18#),
-      (16#7f#,     16#00#),
-      (16#e5#,     16#1f#),
-      (16#e1#,     16#77#),
-      (16#dd#,     16#7f#),
-      (REG_DSP_CTRL0,    CTRL0_YUV422 or CTRL0_YUV_EN or CTRL0_RGB_EN),
-      (16#00#,     16#00#)
-     );
+   --  Setup_Commands : constant Command_Array :=
+   --    ((REG_BANK_SELECT, SELECT_DSP),
+   --     (16#2c#,     16#ff#),
+   --     (16#2e#,     16#df#),
+   --     (REG_BANK_SELECT, SELECT_SENSOR),
+   --     (16#3c#,     16#32#),
+   --     (REG_SENSOR_CLKRC,    16#80#), --  Set PCLK divider */
+   --
+   --     --  COM2_OUT_DRIVE_3x
+   --     (REG_SENSOR_COM2,     16#02#), --  Output drive x3 */
+   --     --  #ifdef OPENMV2
+   --     (REG_SENSOR_REG04,    16#F8#), --  Mirror/VFLIP/AEC[1:0] */
+   --     --  #else
+   --     --      (REG04_SET(REG04_HREF_EN)),
+   --     --  #endif
+   --     (REG_SENSOR_COM8,     COM8_DEFAULT or
+   --                           COM8_BNDF_EN or
+   --                           COM8_AGC_EN or
+   --                           COM8_AEC_EN),
+   --     --  COM9_AGC_GAIN_8x
+   --     (REG_SENSOR_COM9,     COM9_DEFAULT or Shift_Left (16#02#, 5)),
+   --     (16#2c#,     16#0c#),
+   --     (16#33#,     16#78#),
+   --     (16#3a#,     16#33#),
+   --     (16#3b#,     16#fb#),
+   --     (16#3e#,     16#00#),
+   --     (16#43#,     16#11#),
+   --     (16#16#,     16#10#),
+   --     (16#39#,     16#02#),
+   --     (16#35#,     16#88#),
+   --     (16#22#,     16#0a#),
+   --     (16#37#,     16#40#),
+   --     (16#23#,     16#00#),
+   --     (REG_SENSOR_ARCOM2,   16#a0#),
+   --     (16#06#,     16#02#),
+   --     (16#06#,     16#88#),
+   --     (16#07#,     16#c0#),
+   --     (16#0d#,     16#b7#),
+   --     (16#0e#,     16#01#),
+   --     (16#4c#,     16#00#),
+   --     (16#4a#,     16#81#),
+   --     (16#21#,     16#99#),
+   --     (REG_SENSOR_AEW,      16#40#),
+   --     (REG_SENSOR_AEB,      16#38#),
+   --     --  AGC/AEC fast mode operating region
+   --     --  VV_AGC_TH_SET(h,l) ((h<<4)|(l&0x0F))
+   --     --  VV_AGC_TH_SET(16#08#, 16#02#)
+   --     (REG_SENSOR_VV,       Shift_Left (16#08#, 4) or 16#02#),
+   --     (REG_SENSOR_COM19,    16#00#), --  Zoom control 2 MSBs */
+   --     (REG_SENSOR_ZOOMS,    16#00#), --  Zoom control 8 MSBs */
+   --     (16#5c#,     16#00#),
+   --     (16#63#,     16#00#),
+   --     (REG_SENSOR_FLL,      16#00#),
+   --     (REG_SENSOR_FLH,      16#00#),
+   --
+   --     --  Set banding filter
+   --     (REG_SENSOR_COM3,     COM3_DEFAULT or COM3_BAND_AUTO),
+   --     (REG_SENSOR_REG5D,    16#55#),
+   --     (REG_SENSOR_REG5E,    16#7d#),
+   --     (REG_SENSOR_REG5F,    16#7d#),
+   --     (REG_SENSOR_REG60,    16#55#),
+   --     (REG_SENSOR_HISTO_LOW,   16#70#),
+   --     (REG_SENSOR_HISTO_HIGH,  16#80#),
+   --     (16#7c#,     16#05#),
+   --     (16#20#,     16#80#),
+   --     (16#28#,     16#30#),
+   --     (16#6c#,     16#00#),
+   --     (16#6d#,     16#80#),
+   --     (16#6e#,     16#00#),
+   --     (16#70#,     16#02#),
+   --     (16#71#,     16#94#),
+   --     (16#73#,     16#c1#),
+   --     (16#3d#,     16#34#),
+   --     --  (COM7,   COM7_RES_UXGA | COM7_ZOOM_EN),
+   --     (16#5a#,     16#57#),
+   --     (REG_SENSOR_BD50,     16#bb#),
+   --     (REG_SENSOR_BD60,     16#9c#),
+   --
+   --     (REG_BANK_SELECT, SELECT_DSP),
+   --     (16#e5#,     16#7f#),
+   --     (REG_DSP_MC_BIST,  MC_BIST_RESET or MC_BIST_BOOT_ROM_SEL),
+   --     (16#41#,     16#24#),
+   --     (REG_DSP_RESET,    RESET_JPEG or RESET_DVP),
+   --     (16#76#,     16#ff#),
+   --     (16#33#,     16#a0#),
+   --     (16#42#,     16#20#),
+   --     (16#43#,     16#18#),
+   --     (16#4c#,     16#00#),
+   --     (REG_DSP_CTRL3,    CTRL3_BPC_EN or CTRL3_WPC_EN or 16#10#),
+   --     (16#88#,     16#3f#),
+   --     (16#d7#,     16#03#),
+   --     (16#d9#,     16#10#),
+   --     (REG_DSP_R_DVP_SP, R_DVP_SP_AUTO_MODE or 16#2#),
+   --     (16#c8#,     16#08#),
+   --     (16#c9#,     16#80#),
+   --     (REG_DSP_BPADDR,   16#00#),
+   --     (REG_DSP_BPDATA,   16#00#),
+   --     (REG_DSP_BPADDR,   16#03#),
+   --     (REG_DSP_BPDATA,   16#48#),
+   --     (REG_DSP_BPDATA,   16#48#),
+   --     (REG_DSP_BPADDR,   16#08#),
+   --     (REG_DSP_BPDATA,   16#20#),
+   --     (REG_DSP_BPDATA,   16#10#),
+   --     (REG_DSP_BPDATA,   16#0e#),
+   --     (16#90#,     16#00#),
+   --     (16#91#,     16#0e#),
+   --     (16#91#,     16#1a#),
+   --     (16#91#,     16#31#),
+   --     (16#91#,     16#5a#),
+   --     (16#91#,     16#69#),
+   --     (16#91#,     16#75#),
+   --     (16#91#,     16#7e#),
+   --     (16#91#,     16#88#),
+   --     (16#91#,     16#8f#),
+   --     (16#91#,     16#96#),
+   --     (16#91#,     16#a3#),
+   --     (16#91#,     16#af#),
+   --     (16#91#,     16#c4#),
+   --     (16#91#,     16#d7#),
+   --     (16#91#,     16#e8#),
+   --     (16#91#,     16#20#),
+   --     (16#92#,     16#00#),
+   --     (16#93#,     16#06#),
+   --     (16#93#,     16#e3#),
+   --     (16#93#,     16#03#),
+   --     (16#93#,     16#03#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#02#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#93#,     16#00#),
+   --     (16#96#,     16#00#),
+   --     (16#97#,     16#08#),
+   --     (16#97#,     16#19#),
+   --     (16#97#,     16#02#),
+   --     (16#97#,     16#0c#),
+   --     (16#97#,     16#24#),
+   --     (16#97#,     16#30#),
+   --     (16#97#,     16#28#),
+   --     (16#97#,     16#26#),
+   --     (16#97#,     16#02#),
+   --     (16#97#,     16#98#),
+   --     (16#97#,     16#80#),
+   --     (16#97#,     16#00#),
+   --     (16#97#,     16#00#),
+   --     (16#a4#,     16#00#),
+   --     (16#a8#,     16#00#),
+   --     (16#c5#,     16#11#),
+   --     (16#c6#,     16#51#),
+   --     (16#bf#,     16#80#),
+   --     (16#c7#,     16#10#),
+   --     (16#b6#,     16#66#),
+   --     (16#b8#,     16#A5#),
+   --     (16#b7#,     16#64#),
+   --     (16#b9#,     16#7C#),
+   --     (16#b3#,     16#af#),
+   --     (16#b4#,     16#97#),
+   --     (16#b5#,     16#FF#),
+   --     (16#b0#,     16#C5#),
+   --     (16#b1#,     16#94#),
+   --     (16#b2#,     16#0f#),
+   --     (16#c4#,     16#5c#),
+   --     (16#a6#,     16#00#),
+   --     (16#a7#,     16#20#),
+   --     (16#a7#,     16#d8#),
+   --     (16#a7#,     16#1b#),
+   --     (16#a7#,     16#31#),
+   --     (16#a7#,     16#00#),
+   --     (16#a7#,     16#18#),
+   --     (16#a7#,     16#20#),
+   --     (16#a7#,     16#d8#),
+   --     (16#a7#,     16#19#),
+   --     (16#a7#,     16#31#),
+   --     (16#a7#,     16#00#),
+   --     (16#a7#,     16#18#),
+   --     (16#a7#,     16#20#),
+   --     (16#a7#,     16#d8#),
+   --     (16#a7#,     16#19#),
+   --     (16#a7#,     16#31#),
+   --     (16#a7#,     16#00#),
+   --     (16#a7#,     16#18#),
+   --     (16#7f#,     16#00#),
+   --     (16#e5#,     16#1f#),
+   --     (16#e1#,     16#77#),
+   --     (16#dd#,     16#7f#),
+   --     (REG_DSP_CTRL0,    CTRL0_YUV422 or CTRL0_YUV_EN or CTRL0_RGB_EN),
+   --     (16#00#,     16#00#)
+   --    );
 
    procedure Write (This : OV2640_Camera; Addr, Data : UInt8);
    function Read (This : OV2640_Camera; Addr : UInt8) return UInt8;
@@ -255,6 +259,7 @@ package body OV2640 is
    procedure Write (This : OV2640_Camera; Addr, Data : UInt8) is
       Status : I2C_Status;
    begin
+      --This.Port.Mem_Write
       This.I2C.Mem_Write (Addr          => This.Addr,
                           Mem_Addr      => UInt16 (Addr),
                           Mem_Addr_Size => Memory_Size_8b,
@@ -320,12 +325,70 @@ package body OV2640 is
      (This : in out OV2640_Camera;
       Addr : UInt10)
    is
+      vid : UInt8;
+      pid : UInt8;
+
    begin
       This.Addr     := Addr;
+      --Delay_Ms (100);
+         --This.Addr     := 16#60#;
+      Put_Line("First Write");
+      Write (This, 16#07#, 16#80#);
+      Put_Line("Passed");
 
-      for Elt of Setup_Commands loop
-         Write (This, Elt.Addr, Elt.Data);
+      --RESET CPLD
+      Write (This, 16#07#, 16#80#);
+      --delay 0.1;
+      --Delay_Ms(100);
+      Write (This, 16#07#, 16#00#);
+      --delay 0.1;
+      --Delay_Ms(100);
+
+
+      --Check if the camera module type is OV2640
+       while True loop
+         Write (This, 16#FF#, 16#01#);
+         vid := Read(This,16#0A#);
+         pid := Read(This,16#0B#);
+
+         if vid /= 16#26# and (pid /= 16#41# or pid /= 16#42#) then
+             Put_Line("Can't find OV2640 module!");
+            --delay 1.0;
+            --Delay_Ms(1000);
+         else
+             Put_Line("OV2640 detected.END");
+            --delay 1.0;
+            --Delay_Ms(1000);
+         end if;
+
       end loop;
+
+      --Change to JPEG caputre mode and init OV2460
+      --myCAM.set_format(JPEG);
+
+      --InitCAM
+      Write (This, 16#FF#, 16#01#);
+      Write (This, 16#12#, 16#80#);
+      --delay 0.1;
+      --Delay_Ms(100);
+        --  if (m_fmt == JPEG)
+        --  {
+        --    wrSensorRegs8_8(OV2640_JPEG_INIT);
+        --    wrSensorRegs8_8(OV2640_YUV422);
+        --    wrSensorRegs8_8(OV2640_JPEG);
+        --    wrSensorReg8_8(0xff, 0x01);
+        --    wrSensorReg8_8(0x15, 0x00);
+        --    wrSensorRegs8_8(OV2640_320x240_JPEG);
+        --  }
+        --  else
+        --  {
+        --    wrSensorRegs8_8(OV2640_QVGA);
+        --  }
+
+
+      --for Elt of Setup_Commands loop
+        -- Write (This, Elt.Addr, Elt.Data);
+      --end loop;
    end Initialize;
 
    ----------------------

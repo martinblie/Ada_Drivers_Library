@@ -38,7 +38,6 @@ package LSM303AGR is
     -- Specifically allowing them in configure procedure
     -- and adjusting conversions after reading the
     -- accelerometer sensor.
-    -- TODdO: Add magnetometer support.
 
    type Register_Address is new UInt8;
    type Device_Identifier is new UInt8;
@@ -65,6 +64,10 @@ package LSM303AGR is
 
    function Read_Accelerometer
      (This : LSM303AGR_Accelerometer) return All_Axes_Data;
+
+   function Read_Magnetometer
+     (This : LSM303AGR_Accelerometer) return All_Axes_Data;
+
 
 private
    type LSM303AGR_Accelerometer (Port : not null Any_I2C_Port)
@@ -99,6 +102,13 @@ private
    OUT_Y_H_A     : constant Register_Address := 16#2B#;
    OUT_Z_L_A     : constant Register_Address := 16#2C#;
    OUT_Z_H_A     : constant Register_Address := 16#2D#;
+
+   OUT_X_L_REG_M : constant Register_Address := 16#68#;
+   OUT_X_H_REG_M : constant Register_Address := 16#69#;
+   OUT_Y_L_REG_M : constant Register_Address := 16#6A#;
+   OUT_Y_H_REG_M : constant Register_Address := 16#6B#;
+   OUT_Z_L_REG_M : constant Register_Address := 16#2C#;
+   OUT_Z_H_REG_M : constant Register_Address := 16#2D#;
 
    MULTI_BYTE_READ : constant := 2#1000_0000#;
 

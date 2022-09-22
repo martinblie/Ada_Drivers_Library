@@ -72,14 +72,12 @@ package body MicroBit.Time is
       --
       Enable_Event (RTC_1, Compare_0_Event);
 
-      --nRF.Interrupts.Register (nRF.Interrupts.RTC1_Interrupt,
-      --                        RTC1_IRQHandler'Access);
-
       nRF.Events.Enable_Interrupt (nRF.Events.RTC_1_COMPARE_0);
 
+      nRF.Interrupts.Register (nRF.Interrupts.RTC1_Interrupt,
+                              RTC1_IRQHandler'Access);
 
       nRF.Interrupts.Enable (nRF.Interrupts.RTC1_Interrupt);
-
 
       Start (RTC_1);
    end Initialize;
@@ -134,10 +132,11 @@ package body MicroBit.Time is
       Wakeup_Time : constant UInt64 := Clock + Milliseconds;
    begin
       while Wakeup_Time > Clock loop
-         --  Asm (Template => "wfi", -- Wait for interrupt, note that this is a blocking call as the CPU will halt all execution
-         --                          -- Using WFI saves power: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Wait-For-Interrupt?lang=en
-         --       Volatile => True);
-         null;
+         -- Wait for interrupt, note that this is a blocking call as the CPU will halt all execution
+         -- Using WFI saves power: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Wait-For-Interrupt?lang=en
+         -- Disabling this
+         Asm (Template => "wfi",
+                Volatile => True);
       end loop;
    end Delay_Ms;
 

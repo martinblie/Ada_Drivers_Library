@@ -37,7 +37,7 @@ package nRF.Timers is
    type Timer (Periph : not null access NRF_SVD.TIMER.TIMER_Peripheral)
    is tagged private;
 
-   type Timer_Channel is range 0 .. 3;
+   type Timer_Channel is range 0 .. 3; -- timer3 on microbit v2 has 6 channels, but most have 4!
 
    -------------------
    -- Configuration --

@@ -28,25 +28,23 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Console; use MicroBit.Console;
+with MicroBit.Console;
 with MicroBit.Time; use MicroBit.Time;
 with MicroBit.IOs;
+use MicroBit;
 
 procedure Main is
-
-   Value : MicroBit.IOs.Analog_Value;
+   -- a range between 0 and 1023 meaning 0V to 3.3V
+   Value : MicroBit.IOs.Analog_Value; 
 begin
-
-   --  Loop forever
-   loop
-
-      --  Read analog value of microbit pin 1
-      Value := MicroBit.IOs.Analog (1);
-
-      --  Write analog value of microbit pin 0
-      MicroBit.IOs.Write (0, Value);
-	  
-	  MicroBit.Console.Put(Integer'Image(Integer(Value)));
+  loop
+     --  Read analog value of microbit pin 1
+     Value := MicroBit.IOs.Analog (1);
+ 
+     -- Put read value onto serial monitor
+     Console.Put(Integer'Image(Integer(Value)));
+      
+     -- Wait 100 ms for next read
 	  Delay_Ms (100);
    end loop;
 end Main;

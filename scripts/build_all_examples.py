@@ -143,8 +143,7 @@ projects = [
             "/examples/MicroBit_v2/music/music.gpr",
             "/examples/MicroBit_v2/analog_in/analog_in.gpr",
             "/examples/MicroBit_v2/analog_out/analog_out.gpr",
-            "/examples/MicroBit_v2/digital_out/digital_out.gpr",
-            "/examples/MicroBit_v2/BLE_beacon/BLE_beacon.gpr",
+            "/examples/MicroBit_v2/digital_out/digital_out.gpr"
             "/examples/MicroBit_v2/servos/servos.gpr",
             "/examples/MicroBit_v2/accelerometer/accelerometer.gpr",
 			"/examples/MicroBit_v2/ravenscar_tasking/ravenscar_tasking.gpr",

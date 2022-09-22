@@ -1,4 +1,4 @@
-pragma Task_Dispatching_Policy(FIFO_Within_Priorities);
+--pragma Task_Dispatching_Policy(FIFO_Within_Priorities);
 
 with Delay_Aux_Pkg;
 with Ada.Text_IO; use Ada.Text_IO;

@@ -493,5 +493,7 @@ package NRF_SVD.GPIO is
    --  General purpose input and output.
    GPIO_Periph : aliased GPIO_Peripheral
      with Import, Address => GPIO_Base;
+   GPIO_Periph1 : aliased GPIO_Peripheral
+     with Import, Address => GPIO_Base;
 
 end NRF_SVD.GPIO;

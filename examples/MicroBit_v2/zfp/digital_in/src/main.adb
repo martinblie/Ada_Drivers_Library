@@ -28,24 +28,37 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
+with MicroBit.Console;
 with MicroBit.IOs;
+with MicroBit.Time; use MicroBit.Time;
+
+use MicroBit;
 
 procedure Main is
+   isSignalHigh : Boolean;
 begin
+   -- check once if micro:bit v2 pin 0 is high or low.
+   -- The API is horrible. Set(pin) for reading and Set(pin,value) for writing
+   -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value) and AnalogWrite (pin, value)
+   isSignalHigh := MicroBit.IOs.Set (0);
 
-   --  Loop forever
-   loop
+   -- write to serial monitor
+   Console.Put(Boolean'Image(isSignalHigh));
 
-      --  Check if pin 1 is high
-      if MicroBit.IOs.Set (1) then
+   -- wait 1 second before continuing
+   Delay_ms(1000);
 
-         --  Turn off the LED connected to pin 0
-         MicroBit.IOs.Set (0, False);
+ loop
+     --  continuous check if micro:bit v2 pin 1 is high or low
+      if MicroBit.IOs.Set (0) then
+         --write to serial monitor
+         Console.Put("H ");
       else
-
-         --  Turn on the LED connected to pin 0
-         MicroBit.IOs.Set (0, True);
+         --write to serial monitor
+         Console.Put("L ");
       end if;
+
+      -- delay for 100ms and read pin again
+      Delay_ms(100);
    end loop;
 end Main;

@@ -888,7 +888,7 @@ package NRF_SVD.PWM is
       Disabled)
      with Size => 15;
    for CNT_CNT_Field use
-     (Disabled => 0);
+     (Disabled => 4); --test!!!
 
    --  Description cluster[0]: Amount of values (duty cycles) in this sequence
    type CNT_SEQ_Register is record

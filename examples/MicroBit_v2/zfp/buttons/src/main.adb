@@ -29,26 +29,29 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 with MicroBit.Console; use MicroBit.Console;
-
 with MicroBit.Display;
 with MicroBit.Display.Symbols;
 with MicroBit.Buttons; use MicroBit.Buttons;
 use MicroBit;
 
---this demo shows howto use the 2 buttons and the touch logo. Note that the logo is a little sensitive/erratic, sometimes touching back side for ground seems to be needed.
 procedure Main is
 begin
    loop
+      -- this example has 3 buttons that are all software debounced, meaning that when a press event is detected a timer is set to ignore interrupts of more btn press events.
       if MicroBit.Buttons.State (Button_A) = Pressed then
          MicroBit.Display.Display ('A');
          Put_Line ("Pressed A");
       elsif MicroBit.Buttons.State (Button_B) = Pressed then
          MicroBit.Display.Display ('B');
          Put_Line ("Pressed B");
+
+      -- note that the touch logo is a bit finicky, it is not a clean signal as with the buttons.
       elsif MicroBit.Buttons.State (Logo) = Pressed then
+         -- note that you can easily make new symbols by extending the symbol library above
          Display.Symbols.Heart;
          Put_Line ("Pressed L");
       else
+      -- we need to clear all pixels, else pixels overlap because they are not erase in the next loop.
          MicroBit.Display.Clear;
       end if;
    end loop;

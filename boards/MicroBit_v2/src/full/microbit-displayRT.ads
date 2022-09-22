@@ -69,4 +69,6 @@ package MicroBit.DisplayRT is
    function Animation_In_Progress return Boolean;
    --  Is there an animation in progress?
 
+   function ConvertMatrixToMessage return String;
+
 end MicroBit.DisplayRT;

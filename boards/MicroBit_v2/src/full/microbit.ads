@@ -107,6 +107,9 @@ package MicroBit is                                       --  Fuction     nRF528
    MB_SDA  : nRF.GPIO.GPIO_Point renames MB_P30;
    MB_SCL  : nRF.GPIO.GPIO_Point renames MB_P31;
 
+   --MB_SDA  : nRF.GPIO.GPIO_Point renames MB_P20;
+   --MB_SCL  : nRF.GPIO.GPIO_Point renames MB_P19;
+
    MB_UART_RX : nRF.GPIO.GPIO_Point renames MB_P33;
    MB_UART_TX : nRF.GPIO.GPIO_Point renames MB_P34;
 end MicroBit;

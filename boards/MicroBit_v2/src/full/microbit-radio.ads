@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                        Copyright (C) 2016, AdaCore                       --
+--                       Copyright (C) 2016, AdaCore                        --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -29,7 +29,51 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Beacon is
-   procedure Initialize_Radio;
-   procedure Send_Beacon_Packet;
-end Beacon;
+------------------------------------------------------------------------------
+--   The MIT License (MIT)
+--   Copyright (c) 2016 British Broadcasting Corporation.
+--   This software is provided by Lancaster University by arrangement with the BBC.
+--   Permission is hereby granted, free of charge, to any person obtaining a
+--   copy of this software and associated documentation files (the "Software"),
+--   to deal in the Software without restriction, including without limitation
+--   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+--   and/or sell copies of the Software, and to permit persons to whom the
+--   Software is furnished to do so, subject to the following conditions:
+--   The above copyright notice and this permission notice shall be included in
+--   all copies or substantial portions of the Software.
+--   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+--   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+--   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+--   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+--   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+--   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+--    DEALINGS IN THE SOFTWARE.
+-----------------------------------------------------------------------------
+with NRF.Radio;
+--with HAL; use HAL;
+
+package MicroBit.Radio is
+   procedure Enable;
+
+   function Status return nRF.Radio.Radio_State;
+
+   function IsEnabled return Boolean;
+
+   function DataReady return Boolean;
+
+   --procedure Destroy is new Ada.Unchecked_Deallocation
+   --   (Object => nRF.Radio.Framebuffer, Name => Data);
+
+   function Receive return access nRF.Radio.Framebuffer;
+
+   --procedure Send (data : access nRF.Radio.Framebuffer)
+    -- with Pre => data /= null and data.Length <= nRF.Radio.MICROBIT_RADIO_MAX_PACKET_SIZE + nRF.Radio.MICROBIT_RADIO_HEADER_SIZE - 1;
+
+   -- missing or unexposed API's
+   -- set frequency, set group, set protocol, disable,
+   -- set package limit, set speed
+
+private
+   procedure Radio_IRQHandler;
+
+end MicroBit.Radio;

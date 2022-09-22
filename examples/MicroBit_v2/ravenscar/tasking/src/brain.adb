@@ -26,7 +26,7 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-         --Put_Line ("Thinking...");
+         Put_Line ("Thinking...");
          delay 0.01; -- Set C = 10 ms
          delay until Time_Now + Ada.Real_Time.Milliseconds(200);
       end loop;
@@ -39,7 +39,7 @@ package body Brain is
       loop
          Time_Now := Ada.Real_Time.Clock;
 
-         --Put_Line ("Acting...");
+         Put_Line ("Acting...");
          delay 0.01; -- Set C = 10 ms
          delay until Time_Now + Ada.Real_Time.Milliseconds(200); -- Set T = 200 ms
       end loop;

@@ -29,21 +29,22 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with MicroBit.IOs;
+with MicroBit.IOsForTasking;
 with Ada.Real_Time; use Ada.Real_Time;
 
 --The classical blinking demo demonstrating switching pin 0 high and low in .5 sec interval
 procedure Main is
+   pin : MicroBit.IOsForTasking.Pin_Id:= 19;
 begin
   loop
       --  Turn on the LED connected to pin 0
-      MicroBit.IOs.Set (0, True);
+      MicroBit.IOsForTasking.Set (pin, True);
 
       --  Wait 500 milliseconds
       delay until Clock + Milliseconds(500);
 
       --  Turn off the LED connected to pin 0
-      MicroBit.IOs.Set (0, False);
+      MicroBit.IOsForTasking.Set (pin, False);
 
       --  Wait 500 milliseconds
       delay until Clock + Milliseconds(500);

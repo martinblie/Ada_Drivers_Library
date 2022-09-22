@@ -30,7 +30,7 @@
 ------------------------------------------------------------------------------
 
 with HAL; use HAL;
-
+with Ada.Unchecked_Deallocation;
 package nRF.Radio is
 
    procedure Setup_For_Bluetooth_Low_Energy;
@@ -73,8 +73,11 @@ package nRF.Radio is
 
    type Radio_Frequency_MHz is range 2400 .. 2527;
 
+   subtype Radio_Group is UInt8;
+
    type Radio_Power is (Zero_Dbm,
                         Pos_4_Dbm,
+                        Pos_8_Dbm,
                         Neg_30_Dbm,
                         Neg_20_Dbm,
                         Neg_16_Dbm,
@@ -159,14 +162,84 @@ package nRF.Radio is
    type Length_Field_Endianness is (Little_Endian, Big_Endian);
 
    procedure Configure_Packet
-     (S0_Field_Size_In_Byte        : Bit;
+     (S0_Field_Size_In_Byte        : Boolean;
       S1_Field_Size_In_Bit         : UInt4;
       Length_Field_Size_In_Bit     : UInt4;
       Max_Packet_Length_In_Byte    : Packet_Len;
       Static_Packet_Length_In_Byte : Packet_Len;
       On_Air_Endianness            : Length_Field_Endianness);
 
+
+   ------------ SECTION RF SPECIFIC -----------
+   MICROBIT_RADIO_MAXIMUM_RX_BUFFERS : constant Uint8 := 4;
+   MICROBIT_RADIO_MAX_PACKET_SIZE : constant UInt8 := 32;
+   MICROBIT_RADIO_HEADER_SIZE : constant Uint8 := 4;
+
+   type Payload_Data is array (1 .. MICROBIT_RADIO_MAX_PACKET_SIZE)
+     of UInt8 with Volatile;
+
+   type Framebuffer; -- we need to declare it incomplete first
+
+   type fbPtr is access Framebuffer; --we must encapsulate a pointer to a type in a new type to allow it be freed
+
+   type Framebuffer is record
+      Length        : UInt8 := 0; -- The length of the remaining bytes in the packet. includes protocol/version/group fields, excluding the length field itself.
+      Version       : UInt8 := 0; -- Protocol version code.
+      Group         : UInt8 := 0; -- ID of the group to which this packet belongs.
+      Protocol      : UInt8 := 0; -- Inner protocol number c.f. those issued by IANA for IP protocols
+      Payload       : Payload_Data := (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+      PtrNext       : fbPtr := null;
+      RSSI          : UInt7 := 0;
+   end record;
+
+   --for fbPtr'Storage_Size use 4;
+
+   --This procedure is specifically for freeing memory referred to by the framebuffer pointer
+   procedure Free is new Ada.Unchecked_Deallocation (Object => Framebuffer, Name => fbPtr);
+
+   subtype Radio_Address is UInt32;
+
+   --  Configure the radio for basic RF operations
+   procedure Setup_For_RF_nrf52 (Frequency: Radio_Frequency_MHz;
+                                 Mode : Radio_Mode;
+                                 Power: Radio_Power;
+                                 Base0Address : Radio_Address;
+                                 Group: Radio_Group)
+       with Pre => IsInitialized = FALSE;
+
+  function IsInitialized return Boolean;
+
+  function DataReady return Boolean;
+
+  function Get_SafeFramebuffer return Framebuffer;
+
+  procedure Set_QueueDepth(newDepth : UInt8);
+
+  function Get_QueueDepth return UInt8;
+
+  procedure DeepCopyIntoSafeFramebuffer (framebufferPtr : fbPtr);
+
+  function Get_RSSIsample return  UInt7;
+
+  procedure Set_RSSI (rssi_value : UInt7)
+    with Pre => IsInitialized;
+
+  procedure QueueRXBuf
+    with Pre => RxBuf /= NULL and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS;
+
+   RxBuf         : fbPtr := null;
+   RxQueue       : fbPtr := null;
 private
+   IsInit        : Boolean := FALSE;
+   Group         : Radio_Group := 1;
+   rssi          : UInt7 := 0;
+   QueueDepth    : Uint8 :=  0;
+   SafeFramebuffer  : Framebuffer;
+
+   function Get_RSSI return UInt7
+      with Pre => IsInitialized;
+
+   procedure Set_Nrf52FastRampup;
 
    for Radio_State use (Disabled    => 0,
                         Rx_Ramp_Up  => 1,
@@ -180,11 +253,15 @@ private
 
    for Radio_Power use (Zero_Dbm   => 16#00#,
                         Pos_4_Dbm  => 16#04#,
+                        Pos_8_Dbm  => 16#08#,
                         Neg_30_Dbm => 16#D8#,
                         Neg_20_Dbm => 16#EC#,
                         Neg_16_Dbm => 16#F0#,
                         Neg_12_Dbm => 16#F4#,
                         Neg_8_Dbm  => 16#F8#,
                         Neg_4_Dbm  => 16#FC#);
+
+
+
 
 end nRF.Radio;

@@ -47,6 +47,7 @@ with NRF_SVD.TWI;
 with NRF_SVD.UART;
 with NRF_SVD.QDEC;
 with NRF_SVD.SAADC;
+with NRF_SVD.PWM;
 with HAL; use HAL;
 
 package nRF.Tasks is
@@ -192,6 +193,10 @@ package nRF.Tasks is
    ADC_START              : constant Task_Type;
    ADC_SAMPLE             : constant Task_Type;
    ADC_STOP               : constant Task_Type;
+
+   --  Pulse Width Modulation (PWM)
+   PWM_STOP               : constant Task_Type;
+   PWM_SEQSTART_0         : constant Task_Type;
 private
 
    --  Power management tasks
@@ -424,4 +429,9 @@ private
     ADC_SAMPLE               : constant Task_Type :=
      Task_Type (NRF_SVD.SAADC.SAADC_Periph.TASKS_SAMPLE'Address);
 
+   -- Pulse Width Modulation (PWM)
+    PWM_STOP              : constant Task_Type :=
+     Task_Type (NRF_SVD.PWM.PWM0_Periph.TASKS_STOP'Address);
+    PWM_SEQSTART_0         : constant Task_Type :=
+     Task_Type (NRF_SVD.PWM.PWM0_Periph.TASKS_SEQSTART'Address);
 end nRF.Tasks;

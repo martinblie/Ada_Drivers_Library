@@ -15,7 +15,7 @@ package body Delay_Aux_Pkg is
 
    procedure Computational_Intensive_App is
    begin
-      delay 0.9999;
+      delay 0.99;
    end Computational_Intensive_App;
 
 end Delay_Aux_Pkg;
