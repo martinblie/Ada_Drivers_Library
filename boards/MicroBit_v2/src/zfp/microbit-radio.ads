@@ -51,7 +51,8 @@
 -----------------------------------------------------------------------------
 with NRF.Radio;
 with Hal; use Hal;
-
+with ada.Unchecked_Deallocation;
+with System.Memory; use System.Memory;
 package MicroBit.Radio is
    procedure Enable;
 
@@ -82,7 +83,12 @@ package MicroBit.Radio is
    function HeaderOk (Length:UInt8;
                         Version:UInt8;
                         Group:UInt8;
-                        Protocol:UInt8) return Boolean;
+                      Protocol:UInt8) return Boolean;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => nRF.Radio.Framebuffer, Name => nRF.Radio.fbPtr);
+
+
 private
    HeaderLength : Uint8:= 0;
    HeaderVersion : Uint8:= 0;
@@ -90,5 +96,7 @@ private
    HeaderProtocol : Uint8:= 0;
 
    procedure Radio_IRQHandler;
+
+   --pragma Export (C, Free, "__gnat_free");
 
 end MicroBit.Radio;

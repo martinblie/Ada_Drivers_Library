@@ -30,7 +30,7 @@
 ------------------------------------------------------------------------------
 
 with HAL; use HAL;
-with Ada.Unchecked_Deallocation;
+
 package nRF.Radio is
 
    procedure Setup_For_Bluetooth_Low_Energy;
@@ -180,7 +180,7 @@ package nRF.Radio is
 
    type Framebuffer; -- we need to declare it incomplete first
 
-   type fbPtr is access Framebuffer; --we must encapsulate a pointer to a type in a new type to allow it be freed
+   type fbPtr is access all Framebuffer; --we must encapsulate a pointer to a type in a new type to allow it be freed
 
    type Framebuffer is record
       Length        : UInt8 := 0; -- The length of the remaining bytes in the packet. includes protocol/version/group fields, excluding the length field itself.
@@ -195,7 +195,7 @@ package nRF.Radio is
    --for fbPtr'Storage_Size use 4;
 
    --This procedure is specifically for freeing memory referred to by the framebuffer pointer
-   procedure Free is new Ada.Unchecked_Deallocation (Object => Framebuffer, Name => fbPtr);
+  --procedure Free is new Ada.Unchecked_Deallocation (Object => Framebuffer, Name => fbPtr);
 
    subtype Radio_Address is UInt32;
 

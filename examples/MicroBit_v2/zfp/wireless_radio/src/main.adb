@@ -29,15 +29,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 with MicroBit.Radio;
---with nRF.Radio; --we need to refactor a bit more so we dont need this reference
+with nRF.Radio; --we need to refactor a bit more so we dont need this reference
 --with MicroBit.Console; use MicroBit.Console;
 --with MicroBit.Time; use MicroBit.Time;
 use MicroBit;
---with HAL; use HAL;
+with HAL; use HAL;
+with MicroBit.Display;
+with MicroBit.Display.Symbols;
 
 procedure Main is
 
---   data : nRF.Radio.Framebuffer;
+   data : nRF.Radio.Framebuffer;
 begin
 
    Radio.Enable;
@@ -45,17 +47,34 @@ begin
    Radio.StartReceiving;
 
    loop
-     --Delay_Ms(5000);
+--     Delay_Ms(1500);
       -- check if the buffer is not empty, print the received data to the serial monitor
       if Radio.DataReady then
-         --data :=Radio.Receive;
-        null;
+         data :=Radio.Receive;
+         --Put_Line("Read" & UInt8'Image(nRF.Radio.Get_QueueDepth));
          --  Put_Line("L : " & UInt8'Image(data.Length));
          --  Put_Line("V : " & UInt8'Image(data.Version));
          --  Put_Line("G : " & UInt8'Image(data.Group));
          --  Put_Line("P : " & UInt8'Image(data.Protocol));
          --  Put_Line("D0: " & UInt8'Image(data.Payload(1)));
-         --  Put_Line("D1: " & UInt8'Image(data.Payload(2)));
+         --Put_Line("D1: " & UInt8'Image(data.Payload(2)));
+
+         if data.Payload(1) =0 then
+               if data.Payload(2) /= 0 then
+                  Display.Symbols.Heart;
+               else
+                  Display.Clear;
+               end if;
+         end if;
+
+         if data.Payload(1) =1 then
+               if data.Payload(2) /= 0 then
+                Display.Display("Mat?");
+             else
+                Display.Clear;
+             end if;
+         end if;
+
       end if;
    end loop;
 end Main;

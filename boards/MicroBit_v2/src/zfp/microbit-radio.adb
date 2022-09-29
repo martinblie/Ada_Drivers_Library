@@ -34,23 +34,14 @@ with Cortex_M.NVIC; use Cortex_M.NVIC;
 with nRF.Interrupts;
 with nRF.Tasks; use nRF.Tasks;
 with nRF.Events; use nrf.Events;
---with Microbit.Console; use MicroBit.Console;
+with Microbit.Console; use MicroBit.Console;
 --with ada.Unchecked_Deallocation;
 --with System.Storage_Elements; use System.Storage_Elements;
 
+
 package body MicroBit.Radio is
 
- --type Pointer is access Character;
-
---procedure Gnat_Free (Ptr : Pointer);
---pragma Export (C, Gnat_Free, "__gnat_free");
-
-
-   --procedure Free is new Ada.Unchecked_Deallocation
-  --    (Object => nRF.Radio.Framebuffer, Name => nRF.Radio.fbPtr);
-
-
-   function State return Radio_State is
+  function State return Radio_State is
    begin
       return nRF.Radio.State;
    end State;
@@ -86,7 +77,7 @@ package body MicroBit.Radio is
          DeepCopyIntoSafeFramebuffer(p);
 
          --deallocate p from heap memory
-         --Gnat_Free(p);
+         Free(p);
       end if;
 
       return Get_SafeFramebuffer;
@@ -155,7 +146,7 @@ package body MicroBit.Radio is
    procedure Radio_IRQHandler is
      sample : UInt7;
      begin
-      if (RADIO_Periph.CRCSTATUS.CRCSTATUS = Crcok) then
+      if (RADIO_Periph.CRCSTATUS.CRCSTATUS = Crcok and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS) then
 
          if HeaderOK(nRF.Radio.RxBuf.Length,
                      nRF.Radio.RxBuf.Version,
@@ -167,7 +158,8 @@ package body MicroBit.Radio is
             --  Put_Line("P : " & UInt8'Image(nRF.Radio.RxBuf.all.Protocol));
             --  Put_Line("D0: " & UInt8'Image(nRF.Radio.RxBuf.all.Payload(1)));
             --  Put_Line("D1: " & UInt8'Image(nRF.Radio.RxBuf.all.Payload(2)));
-
+            --Put_Line("Received");
+            --Put_Line("Send: " & UInt8'Image(nRF.Radio.Get_QueueDepth));
             sample := Get_RSSIsample;
             --  Put_Line("R: " & UInt7'Image(sample));
 
@@ -184,11 +176,12 @@ package body MicroBit.Radio is
       else
          Set_RSSI(0);
       end if;
-
+      --Put_Line("trig");
       --important otherwise this ISR gets called repeatedly. We can do this anywhere we like in this routine, but at least before trigger RXEN.
       --note that since radio state is no longer in RX so no new interrupts can happen until we trigger RXEN
       Clear (Radio_END);
       nRF.Tasks.Trigger (nRF.Tasks.Radio_RXEN); --due to short setup it will go from RXEN to RXRU to START to RX
    end Radio_IRQHandler;
+
 
 end MicroBit.Radio;

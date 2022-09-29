@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                       Copyright (C) 2016, AdaCore                        --
+--                       Copyright (C) 2018, AdaCore                        --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -28,52 +28,39 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
+with MicroBit.IOs;
+with MicroBit;
 
-------------------------------------------------------------------------------
---   The MIT License (MIT)
---   Copyright (c) 2016 British Broadcasting Corporation.
---   This software is provided by Lancaster University by arrangement with the BBC.
---   Permission is hereby granted, free of charge, to any person obtaining a
---   copy of this software and associated documentation files (the "Software"),
---   to deal in the Software without restriction, including without limitation
---   the rights to use, copy, modify, merge, publish, distribute, sublicense,
---   and/or sell copies of the Software, and to permit persons to whom the
---   Software is furnished to do so, subject to the following conditions:
---   The above copyright notice and this permission notice shall be included in
---   all copies or substantial portions of the Software.
---   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
---   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
---   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
---   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
---   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
---   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
---    DEALINGS IN THE SOFTWARE.
------------------------------------------------------------------------------
-with NRF.Radio;
---with HAL; use HAL;
+procedure Main is
+   Speed : constant MicroBit.IOs.Analog_Value := 512; --between 0 and 1023
+   Forward : constant Boolean := True; -- forward is true, backward is false
+   
+begin
+   --  We set the frequency by setting the period (remember f=1/t).
+   MicroBit.IOs.Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
+   
+   --LEFT
+   --front   
+   MicroBit.IOs.Set(6, Forward); --IN1
+   MicroBit.IOs.Set(7, not Forward); --IN2
+   
+   --back
+   MicroBit.IOs.Set(2, Forward); --IN3
+   MicroBit.IOs.Set(3, not Forward); --IN4
+   
+   --RIGHT
+   --front
+   MicroBit.IOs.Set(12, Forward); --IN1
+   MicroBit.IOs.Set(13, not Forward); --IN2
 
-package MicroBit.Radio is
-   procedure Enable;
-
-   function Status return nRF.Radio.Radio_State;
-
-   function IsEnabled return Boolean;
-
-   function DataReady return Boolean;
-
-   --procedure Destroy is new Ada.Unchecked_Deallocation
-   --   (Object => nRF.Radio.Framebuffer, Name => Data);
-
-   function Receive return access nRF.Radio.Framebuffer;
-
-   --procedure Send (data : access nRF.Radio.Framebuffer)
-    -- with Pre => data /= null and data.Length <= nRF.Radio.MICROBIT_RADIO_MAX_PACKET_SIZE + nRF.Radio.MICROBIT_RADIO_HEADER_SIZE - 1;
-
-   -- missing or unexposed API's
-   -- set frequency, set group, set protocol, disable,
-   -- set package limit, set speed
-
-private
-   procedure Radio_IRQHandler;
-
-end MicroBit.Radio;
+   --back
+   MicroBit.IOs.Set(14, Forward); --IN3
+   MicroBit.IOs.Set(15, not Forward); --IN4
+   
+   MicroBit.IOs.Write (0, Speed); --left speed control ENA ENB
+   MicroBit.IOs.Write (1, Speed); --right speed control ENA ENB
+   
+   loop
+     null;
+   end loop;
+end Main;
