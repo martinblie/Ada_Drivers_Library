@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                       Copyright (C) 2016, AdaCore                        --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -29,58 +29,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with LSM303AGR; use LSM303AGR;
+package MicroBit.Time.Highspeed is
+   subtype Time_Us is UInt64;
 
-with MicroBit.DisplayRT;
-with MicroBit.DisplayRT.Symbols;
-with MicroBit.Accelerometer;
---with MicroBit.Console;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Real_Time; use Ada.Real_Time;
-use MicroBit;
+   procedure Delay_Us (Microseconds : UInt64);
 
-procedure Main is
-
-   Data: All_Axes_Data;
-
-   Threshold : constant := 150;
-begin
-
-   loop
-
-      --  Read the accelerometer data
-      Data := Accelerometer.AccelData;
-
-      --  Print the data on the serial port
-      Put_Line ("ACC" & ";" &
-                "X,"  & Data.X'Img & ";" &
-                "Y,"  & Data.Y'Img & ";" &
-                "Z,"  & Data.Z'Img);
-
-
-      --  Clear the LED matrix
-      MicroBit.DisplayRT.Clear;
-
-      --  Draw a symbol on the LED matrix depending on the orientation of the
-      --  micro:bit.
-      if Data.X > Threshold then
-         MicroBit.DisplayRT.Symbols.Left_Arrow;
-
-      elsif Data.X < -Threshold then
-         MicroBit.DisplayRT.Symbols.Right_Arrow;
-
-      elsif Data.Y > Threshold then
-         DisplayRT.Symbols.Up_Arrow;
-
-      elsif Data.Y < -Threshold then
-         MicroBit.DisplayRT.Symbols.Down_Arrow;
-
-      else
-         MicroBit.DisplayRT.Symbols.Heart;
-
-      end if;
-
-      --  Do nothing for 250 milliseconds
-       delay until Clock + Milliseconds(16);
-   end loop;
-end Main;
+end MicroBit.Time.Highspeed;

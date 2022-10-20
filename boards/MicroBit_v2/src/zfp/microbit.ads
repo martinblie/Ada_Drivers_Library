@@ -42,13 +42,12 @@ with nRF.GPIO;
 --    we mapped nRF52833 P0.00 to P0.31 -> Device.P0  to Device.P31
 --    we mapped nRF52833 P1.00 to P1.16 -> Device.P32 to Device.P47
 --    not all microcontroller pins are exposed on the PCB
---    you can only use 3 active PWM pins (there are 3 Real-time counters in the MCU)
 --    you can only draw 270 mA of current, note that the speaker and mic use a lot of this budget.
 --    all digital input pins have pull-down resistors enabled by default
 --    each pin is designed for a main function/capability which might need to be disabled if you use another
 --    some functions like NFC are disabled by default, but can be enabled
 --    the nRF52 microcontroller is a single core processor, so we cannot use ADA 20XX parallel functionality
---    One analog channel, AIN5 (Device.P29) is not exposed on the PCB
+--    six analog channels available, two analog channels, AIN3 (nRF52833 pinID P0.05) and AIN5 (nRF52833 pinID P0.29) are not exposed on the PCB
 
 -- expansion board mapping:
 -- Physical Board : nRF.Device.Id  : IO.Set(pin id)
@@ -85,7 +84,7 @@ package MicroBit is                                       --  Fuction     nRF528
    MB_P26  : nRF.GPIO.GPIO_Point renames nRF.Device.P36;  --  LOGO        P1.04            TOUCH
    MB_P27  : nRF.GPIO.GPIO_Point renames nRF.Device.P00;  --  SPEAKER     P0.00
    MB_P28  : nRF.GPIO.GPIO_Point renames nRF.Device.P20;  --  RUN_MIC     P0.20
-   MB_P29  : nRF.GPIO.GPIO_Point renames nRF.Device.P05;  --  MIC_IN      P0.05            AIN3
+   MB_P29  : nRF.GPIO.GPIO_Point renames nRF.Device.P05;  --  MIC_IN      P0.05            AIN3 (internal)
    MB_P30  : nRF.GPIO.GPIO_Point renames nRF.Device.P16;  --  I2C_INT_SDA P0.16
    MB_P31  : nRF.GPIO.GPIO_Point renames nRF.Device.P08;  --  I2C_INT_SCL P0.08
    MB_P32  : nRF.GPIO.GPIO_Point renames nRF.Device.P25;  --  COMBINED_SENSOR_INT P0.25

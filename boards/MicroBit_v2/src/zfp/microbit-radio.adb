@@ -34,7 +34,7 @@ with Cortex_M.NVIC; use Cortex_M.NVIC;
 with nRF.Interrupts;
 with nRF.Tasks; use nRF.Tasks;
 with nRF.Events; use nrf.Events;
-with Microbit.Console; use MicroBit.Console;
+--with Microbit.Console; use MicroBit.Console;
 --with ada.Unchecked_Deallocation;
 --with System.Storage_Elements; use System.Storage_Elements;
 
@@ -93,7 +93,7 @@ package body MicroBit.Radio is
                               Radio_IRQHandler'Access);
 
       --Assing a priority when the radio interrupt occurs
-      nRF.Interrupts.Set_Priority(nRF.Interrupts.RADIO_Interrupt, 0); --3 priority bits with 0 being the highest priority
+      nRF.Interrupts.Set_Priority(nRF.Interrupts.RADIO_Interrupt, 0); --3 priority bits with 0 being the highest priority?
 
       --Setup the radio for both sending, eg. TX and receiving eg. RX
       nRF.Radio.Setup_For_RF_nrf52(2400, Nordic_1MBIT, Zero_Dbm,16#75_62_69_74#,16#1#);

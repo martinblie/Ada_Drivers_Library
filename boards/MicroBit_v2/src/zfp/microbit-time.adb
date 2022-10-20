@@ -66,9 +66,11 @@ package body MicroBit.Time is
 
       Stop (RTC_1);
 
-      --  1kHz
-      Set_Prescaler (RTC_1, 0);
-      Set_Compare (RTC_1, 0, 32);
+      --  1kHz so 1 ms period ticks
+      Set_Prescaler (RTC_1, 0);  -- prescaler is 0, runs at 32.768 Khz and has the best counter resolution (see Table 89 https://infocenter.nordicsemi.com/pdf/nRF52833_PS_v1.5.pdf)
+      Set_Compare (RTC_1, 0,32); -- count to 33 -1 = 32 such that the the RTC runs close to 1 KHz. It seems the -1 term comes from 1 lost period due to stop, clear, start in the interrupt handler.
+                                 -- but not exact, meaning it will differ from eg. an atomic wall clock! Exact is 33* 30.517us = 1007,061 us
+                                 -- Error: 7 us per 1 Khz tick or 7ms per second or 420 ms per hour or 10.08 s per day.
       --
       Enable_Event (RTC_1, Compare_0_Event);
 
@@ -98,7 +100,11 @@ package body MicroBit.Time is
    procedure RTC1_IRQHandler is
    begin
       Stop (RTC_1);
-      Clear (RTC_1);
+      Clear (RTC_1); --note a clear takes between 15 and 45 us see manual, meaning there is limit to how fast you can restart
+                     --another option is to use not use clear and update the CC with the period at every interrupt
+                     --for this you need to read the counter value which takes 5 16MHz clock pulses + 2 LFCLK clock pulses, so also has a clear limit
+                     --with this you can get 2 period signals eg 2*30.5us.
+                     --to get to limit of 30.5us or 1 period signals , TICK needs to be enabled and event need to be raised
       Start (RTC_1);
 
       nRF.Events.Clear (nRF.Events.RTC_1_COMPARE_0);

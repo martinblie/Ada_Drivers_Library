@@ -158,12 +158,12 @@ package body nRF.Timers is
          when 3 =>
             This.Periph.SHORTS.COMPARE3_CLEAR := (if Clear then Enabled else Disabled);
             This.Periph.SHORTS.COMPARE3_STOP := (if Stop then Enabled else Disabled);
-         --  when 4 =>
-         --     This.Periph.SHORTS.COMPARE4_CLEAR := (if Clear then Enabled else Disabled);
-         --     This.Periph.SHORTS.COMPARE4_STOP := (if Stop then Enabled else Disabled);
-         --  when 5 =>
-         --     This.Periph.SHORTS.COMPARE4_CLEAR := (if Clear then Enabled else Disabled);
-         --     This.Periph.SHORTS.COMPARE4_STOP := (if Stop then Enabled else Disabled);
+         when 4 =>
+            This.Periph.SHORTS.COMPARE4_CLEAR := (if Clear then Enabled else Disabled);
+            This.Periph.SHORTS.COMPARE4_STOP := (if Stop then Enabled else Disabled);
+         when 5 =>
+            This.Periph.SHORTS.COMPARE4_CLEAR := (if Clear then Enabled else Disabled);
+            This.Periph.SHORTS.COMPARE4_STOP := (if Stop then Enabled else Disabled);
       end case;
    end Compare_Shortcut;
 
