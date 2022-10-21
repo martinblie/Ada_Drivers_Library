@@ -44,7 +44,7 @@ package body Ultrasonic is
       end SendTriggerPulse;
 
    function WaitForEcho return Integer is
-      delayCounter :Integer := 0 with Volatile;
+      delayCounter :Integer := 0;
    begin
       --wait for echo to start
       while GPIO_Periph.IN_k.Arr(echo_pin_device) = low loop
