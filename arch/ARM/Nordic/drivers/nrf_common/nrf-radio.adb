@@ -42,7 +42,7 @@ package body nRF.Radio is
    begin
       Set_Mode (BLE_1MBIT);
 
-      Configure_Packet (S0_Field_Size_In_Byte        => TRUE,
+      Configure_Packet (S0_Field_Size_In_Byte        => LengthIsOne,
                         S1_Field_Size_In_Bit         => 0,
                         Length_Field_Size_In_Bit     => 8,
                         Max_Packet_Length_In_Byte    => 1 + 1 + 37,
@@ -67,7 +67,7 @@ package body nRF.Radio is
       --Setup based on https://github.com/andenore/NordicSnippets/blob/master/examples/radio_rx and https://github.com/aiunderstand/NRF52_Radio_library
       --Full spec on nrf52833 manual: https://infocenter.nordicsemi.com/pdf/nRF52833_PS_v1.5.pdf
       --Current issues:
-        -- Memory map or clock issue, missing errata? CRC is enabled while set to disabled and BALEN is set to illegal value of 1. Ideally we set BALEN to 4 with CRC to 2.
+        -- There is some relevant errata related to CRC, no errata has been added to nrf-device.adb
         -- Not all API's are exposed with functions, eg. disable, gpio at compare, etc.
         -- Not all ranges are exposed, eg. with frequency we can also choose 40 Mhz lower than 2400, so the full range is acstually between 2360-2500 in 1MHz steps
         -- The setup of parameters is done at startup, not at runtime. See examples in repo's on how to implement.
@@ -87,45 +87,93 @@ package body nRF.Radio is
 
       --Enable the High Frequency clock on the processor. This is a pre-requisite for
 	   --the RADIO module. Without this clock, no communication is possible.
-      Set_High_Freq_Source (HFCLK_XTAL);
+      Set_High_Freq_Source (HFCLK_RC);
       Start_High_Freq;
       while not High_Freq_Running loop
          null;
       end loop;
 
-      Configure_Packet (S0_Field_Size_In_Byte        => False,
+      --  RADIO_Periph.TXPOWER.TXPOWER := NRF_SVD.RADIO.Val_0DBm;
+      --  RADIO_Periph.FREQUENCY.FREQUENCY := 7;
+      --  RADIO_Periph.MODE.MODE := Nrf_1Mbit;
+      --  RADIO_Periph.BASE0 := 16#75_62_69_74#;
+      --  RADIO_Periph.PREFIX0.Val := 1;
+      --  RADIO_Periph.TXADDRESS.TXADDRESS := 0;
+      --  RADIO_Periph.RXADDRESSES.ADDR.Val :=1;
+      --
+      --  -- PCNF0 = 0x00000008
+      --  RADIO_Periph.PCNF0.LFLEN := 8;
+      --  RADIO_Periph.PCNF0.S0LEN := LengthIsZero;
+      --  RADIO_Periph.PCNF0.S1LEN := 0;
+      --  RADIO_Periph.PCNF0.S1INCL := Automatic;
+      --  RADIO_Periph.PCNF0.PLEN   := Val_8BIT;
+      --
+      --  --PCNF1 = 0x02040000 | MICROBIT_RADIO_MAX_PACKET_SIZE
+      --  RADIO_Periph.PCNF1.MAXLEN := 32;
+      --  RADIO_Periph.PCNF1.STATLEN := 0;
+      --  RADIO_Periph.PCNF1.BALEN := 2;
+      --  RADIO_Periph.PCNF1.ENDIAN := Little;
+      --  RADIO_Periph.PCNF1.WHITEEN := Enabled;
+      --
+      --  --NRF_RADIO->DATAWHITEIV = 0x40
+      --  RADIO_Periph.DATAWHITEIV.DATAWHITEIV := 16#40#;
+      --
+      --  --NRF_RADIO->CRCCNF =  RADIO_CRCCNF_LEN_Two
+      --  --NRF_RADIO->CRCPOLY = 0x123456
+      --  --NRF_RADIO->CRCINIT = 0xABCDEF
+      --  RADIO_Periph.CRCCNF.LEN := Two;
+      --  RADIO_Periph.CRCCNF.SKIPADDR := Include;
+      --  RADIO_Periph.CRCPOLY.CRCPOLY := 16#ABCDEF#;
+      --  RADIO_Periph.CRCINIT.CRCINIT := 16#123456#;
+      --
+      --  RADIO_Periph.PACKETPTR := UInt32 (To_Integer (RxBuf.all'Address));
+
+
+     Configure_Packet (S0_Field_Size_In_Byte         => LengthZero,
                         S1_Field_Size_In_Bit         => 0,
                         Length_Field_Size_In_Bit     => 8,
                         Max_Packet_Length_In_Byte    => MICROBIT_RADIO_MAX_PACKET_SIZE,
                         Static_Packet_Length_In_Byte => 0,
                         On_Air_Endianness            => Little_Endian);
 
-      Configure_CRC (Enable        => False, --normally set to enabled
-                     Length        => 2, --this values is ignored when disabled, but ideally set to 2
-                     Skip_Address  => False,
-                     Polynomial    => 16#AB_CD_EF#,
-                     Initial_Value => 16#12_34_56#);
+     Configure_CRC (Enable        => True,
+                    Length        => 2,
+                    Skip_Address  => False,
+                    Polynomial    => 16#ABCDEF#,
+                    Initial_Value => 16#123456#);
 
+     -- BUG: The base address is 4 bytes (16#12_34_56_78#), but when BaseLength is set to use all 4 bytes, radio communication does not work
+     -- The bug must be in ADL, since with Arduino implementation using same instructions it works.
+     -- relevant sources: https://infocenter.nordicsemi.com/pdf/nRF52833_PS_v1.5.pdf page 282
+     -- https://github.com/aiunderstand/NRF52_Radio_library and
+     -- Sanity check: create a Arduino sender and receiver with BaseLength set to 2 see if they communicate.
+     -- Create an ADA receiver set to BaseLength 2 and see Arduino and Ada communicate. Now set BaseLength to 4 in Arduino and verify sender and reciever still work.
+     -- Set ADA baselength to 4 while keeping Arduino to 4 and note that radio communication fails.
+
+     -- In this example the base address is using BaseLength 2 https://github.com/andenore/NordicSnippets/blob/master/examples/radio_rx/main.c
+     -- So it might be that arduino fixed it with some errata at startup?
       Set_Logic_Addresses (Base0 => Base0Address,
-                           Base1 => 16#00_00_00_00#,
-                           Base_Length_In_Byte => 1, --set to illegal value of 1, should ideally be 4
-                           AP0   => Group,
-                           AP1   => 16#00#,
-                           AP2   => 16#00#,
-                           AP3   => 16#00#,
-                           AP4   => 16#00#,
-                           AP5   => 16#00#,
-                           AP6   => 16#00#,
-                           AP7   => 16#00#);
+                          Base1 => 16#00_00_00_00#,
+                          Base_Length_In_Byte => 2, -- See remarks why set to 2
+                          AP0   => Group,
+                          AP1   => 16#00#,
+                          AP2   => 16#00#,
+                          AP3   => 16#00#,
+                          AP4   => 16#00#,
+                          AP5   => 16#00#,
+                          AP6   => 16#00#,
+                          AP7   => 16#00#);
 
-      Set_Mode (Mode);
-      Set_Frequency(Frequency);
-      Set_Power(Power);
-      Configure_Whitening (True);
-      Set_TX_Address(0);
-      Set_RX_Addresses((true,false,false,false,false,false,false,false));
-      Set_Nrf52FastRampup;
-      Set_Packet(RxBuf.all'Address);
+   Set_Mode (Mode);
+   Set_Frequency(Frequency);
+   Set_Power(Power);
+   Configure_Whitening (True);
+   Set_TX_Address(0);
+   Set_RX_Addresses((true,false,false,false,false,false,false,false));
+
+   Set_Nrf52FastRampup;
+
+   Set_Packet(RxBuf.all'Address);
 
       -- Using shorts is much faster than manual state transition from disabled to RX state due to CPU cycles. For a manual example see nrf52 library repo
       -- Check fig. 6 in the manual
@@ -316,9 +364,9 @@ end Set_QueueDepth;
    begin
 
       NewRxBuf := new FrameBuffer;
-      if NewRxBuf = null then --is this never null in ADA?
-         return;
-      end if;
+      --  if NewRxBuf = null then --is this never null in ADA?
+      --     return;
+      --  end if;
 
       -- Store the received RSSI value in the frame
       RxBuf.all.rssi := Get_RSSI;
@@ -364,8 +412,7 @@ end Set_QueueDepth;
 
    procedure Set_Frequency (F : Radio_Frequency_MHz) is
    begin
-      RADIO_Periph.FREQUENCY.FREQUENCY :=
-        UInt7 (F - Radio_Frequency_MHz'First);
+      RADIO_Periph.FREQUENCY.FREQUENCY := UInt7 (F - Radio_Frequency_MHz'First);
    end Set_Frequency;
 
    ---------------
@@ -397,13 +444,13 @@ end Set_QueueDepth;
 
    procedure Set_Logic_Addresses
      (Base0, Base1 : HAL.UInt32;
-      Base_Length_In_Byte : Base_Address_Lenght;
+      Base_Length_In_Byte : HAL.UInt3;
       AP0, AP1, AP2, AP3, AP4, AP5, AP6, AP7 : HAL.UInt8)
    is
    begin
       RADIO_Periph.BASE0 := Base0;
       RADIO_Periph.BASE1 := Base1;
-      RADIO_Periph.PCNF1.BALEN := UInt3 (Base_Length_In_Byte);
+      RADIO_Periph.PCNF1.BALEN :=  Base_Length_In_Byte;
       RADIO_Periph.PREFIX0.Arr := (AP0, AP1, AP2, AP3);
       RADIO_Periph.PREFIX1.Arr := (AP4, AP5, AP6, AP7);
    end Set_Logic_Addresses;
@@ -468,8 +515,8 @@ end Set_QueueDepth;
    procedure Configure_CRC (Enable        : Boolean;
                             Length        : UInt2;
                             Skip_Address  : Boolean;
-                            Polynomial    : UInt24;
-                            Initial_Value : UInt24)
+                            Polynomial    : UInt32;
+                            Initial_Value : UInt32)
    is
    begin
       if Enable then
@@ -511,7 +558,7 @@ end Set_QueueDepth;
    begin
       RADIO_Periph.PCNF1.WHITEEN := (if Enable then Enabled else Disabled);
       RADIO_Periph.DATAWHITEIV.DATAWHITEIV :=
-        16#55# or UInt7 (Initial_Value);
+        16#40# or UInt7 (Initial_Value);
    end Configure_Whitening;
 
    ----------------------
@@ -519,7 +566,7 @@ end Set_QueueDepth;
    ----------------------
 
    procedure Configure_Packet
-     (S0_Field_Size_In_Byte        : Boolean;
+     (S0_Field_Size_In_Byte        : Length_Field_S0;
       S1_Field_Size_In_Bit         : UInt4;
       Length_Field_Size_In_Bit     : UInt4;
       Max_Packet_Length_In_Byte    : Packet_Len;
@@ -528,8 +575,15 @@ end Set_QueueDepth;
    is
    begin
       RADIO_Periph.PCNF0.LFLEN := Length_Field_Size_In_Bit;
-      RADIO_Periph.PCNF0.S0LEN := S0_Field_Size_In_Byte; --removed overwrite =1;
+      RADIO_Periph.PCNF0.S0LEN := (if S0_Field_Size_In_Byte = LengthZero then
+                                       LengthIsZero
+                                    else
+                                      LengthIsOneByte);
+
       RADIO_Periph.PCNF0.S1LEN := S1_Field_Size_In_Bit;
+      RADIO_Periph.PCNF0.S1INCL := Automatic;
+      RADIO_Periph.PCNF0.PLEN   := Val_8BIT;
+
       RADIO_Periph.PCNF1.MAXLEN := Max_Packet_Length_In_Byte;
       RADIO_Periph.PCNF1.STATLEN := Static_Packet_Length_In_Byte;
       RADIO_Periph.PCNF1.ENDIAN := (if On_Air_Endianness = Little_Endian then

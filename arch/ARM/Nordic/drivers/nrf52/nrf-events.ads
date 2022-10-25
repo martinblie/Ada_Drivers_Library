@@ -89,6 +89,8 @@ package nRF.Events is
    Radio_DEVMISS       : constant Event_Type;
    Radio_RSSIEND       : constant Event_Type;
    Radio_BCMATCH       : constant Event_Type;
+   Radio_CRCOK         : constant Event_Type;
+   Radio_CRCERROR      : constant Event_Type;
 
    --  Timer 0 events
    Timer_0_COMPARE_0   : constant Event_Type;
@@ -229,6 +231,10 @@ private
      Event_Type (NRF_SVD.RADIO.RADIO_Periph.EVENTS_RSSIEND'Address);
    Radio_BCMATCH       : constant Event_Type :=
      Event_Type (NRF_SVD.RADIO.RADIO_Periph.EVENTS_BCMATCH'Address);
+   Radio_CRCOK         : constant Event_Type :=
+     Event_Type (NRF_SVD.RADIO.RADIO_Periph.EVENTS_CRCOK'Address);
+   Radio_CRCERROR         : constant Event_Type :=
+     Event_Type (NRF_SVD.RADIO.RADIO_Periph.EVENTS_CRCERROR'Address);
 
    --  Timer 0 events
    Timer_0_COMPARE_0   : constant Event_Type :=

@@ -998,6 +998,15 @@ package NRF_SVD.RADIO is
      (Automatic => 0,
       Include => 1);
 
+    type PCNF0_S0LEN_Field is
+     (--Length on air of S0 field in number of bytes
+      LengthIsZero,
+      LengthIsOneByte)
+     with Size => 1;
+   for PCNF0_S0LEN_Field use
+     (LengthIsZero => 0,
+      LengthIsOneByte => 1);
+
    --  Length of preamble on air. Decision point: TASKS_START task
    type PCNF0_PLEN_Field is
      (--  8-bit preamble
@@ -1016,7 +1025,7 @@ package NRF_SVD.RADIO is
       --  unspecified
       Reserved_4_7   : HAL.UInt4 := 16#0#;
       --  Length on air of S0 field in number of bytes.
-      S0LEN          : Boolean := False;
+      S0LEN          : PCNF0_S0LEN_Field := LengthIsZero;
       --  unspecified
       Reserved_9_15  : HAL.UInt7 := 16#0#;
       --  Length on air of S1 field in number of bits.
@@ -1279,38 +1288,32 @@ package NRF_SVD.RADIO is
       Reserved_9_31 at 0 range 9 .. 31;
    end record;
 
-   subtype CRCPOLY_CRCPOLY_Field is HAL.UInt24;
+   subtype CRCPOLY_CRCPOLY_Field is HAL.UInt32;
 
    --  CRC polynomial
    type CRCPOLY_Register is record
       --  CRC polynomial
       CRCPOLY        : CRCPOLY_CRCPOLY_Field := 16#0#;
-      --  unspecified
-      Reserved_24_31 : HAL.UInt8 := 16#0#;
    end record
      with Volatile_Full_Access, Object_Size => 32,
           Bit_Order => System.Low_Order_First;
 
    for CRCPOLY_Register use record
-      CRCPOLY        at 0 range 0 .. 23;
-      Reserved_24_31 at 0 range 24 .. 31;
+      CRCPOLY        at 0 range 0 .. 31;
    end record;
 
-   subtype CRCINIT_CRCINIT_Field is HAL.UInt24;
+   subtype CRCINIT_CRCINIT_Field is HAL.UInt32;
 
    --  CRC initial value
    type CRCINIT_Register is record
       --  CRC initial value
       CRCINIT        : CRCINIT_CRCINIT_Field := 16#0#;
-      --  unspecified
-      Reserved_24_31 : HAL.UInt8 := 16#0#;
    end record
      with Volatile_Full_Access, Object_Size => 32,
           Bit_Order => System.Low_Order_First;
 
    for CRCINIT_Register use record
-      CRCINIT        at 0 range 0 .. 23;
-      Reserved_24_31 at 0 range 24 .. 31;
+      CRCINIT        at 0 range 0 .. 31;
    end record;
 
    subtype TIFS_TIFS_Field is HAL.UInt8;

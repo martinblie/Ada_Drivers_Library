@@ -29,21 +29,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 with NRF_SVD.RADIO; use NRF_SVD.RADIO;
-with nRF.Radio; use nRF.Radio;
 with Cortex_M.NVIC; use Cortex_M.NVIC;
 with nRF.Interrupts;
 with nRF.Tasks; use nRF.Tasks;
 with nRF.Events; use nrf.Events;
---with Microbit.Console; use MicroBit.Console;
---with ada.Unchecked_Deallocation;
---with System.Storage_Elements; use System.Storage_Elements;
-
 
 package body MicroBit.Radio is
 
-  function State return Radio_State is
+   function State return String is
    begin
-      return nRF.Radio.State;
+      return "Status: " & Radio_State'Image(nRF.Radio.State) & " (0=Disabled, 3=RX, 6=TX)";
+
    end State;
 
    function IsInitialized return Boolean is
@@ -56,9 +52,7 @@ package body MicroBit.Radio is
 	   return nRF.Radio.DataReady;
    end DataReady;
 
-
-
-   function Receive return nrF.Radio.Framebuffer is
+   function Receive return RadioData is
       p : fbPtr;
    begin
       if DataReady then
@@ -73,7 +67,7 @@ package body MicroBit.Radio is
 		  -- Allow ISR access to shared resource
          nRF.Interrupts.Enable (nRF.Interrupts.RADIO_Interrupt);
 
-        --copy content of p into object
+        --copy content of p into object (eg we move from unsafe dynamically created and destroyed framebuffers due to pointer to a safe reusable at runtime created framebuffer)
          DeepCopyIntoSafeFramebuffer(p);
 
          --deallocate p from heap memory
@@ -83,10 +77,42 @@ package body MicroBit.Radio is
       return Get_SafeFramebuffer;
    end Receive;
 
+   procedure Transmit (Data : RadioData) is
+   begin
+      -- Prepare package
+      TxBuf.Length := Data.Length;
+      TxBuf.Version := Data.Version;
+      TxBuf.Group := Data.Group;
+      TxBuf.Protocol := Data.Protocol;
+      TxBuf.Payload := Data.Payload;
+
+      -- Protect shared resource from ISR activity
+      nRF.Interrupts.Disable (nRF.Interrupts.RADIO_Interrupt);
+
+      -- Turn off the transceiver.
+	   StopReceiving;
+
+	   -- Configure the radio to send the buffer provided.
+      Set_Packet(TxBuf.all'Address);
+
+      -- Turn on the transmitter, send and wait
+      TransmitAndWait;
+
+      -- Return the radio to using the default receive buffer
+      Set_Packet(RxBuf.all'Address);
+
+      -- Start receiving AGAIN
+      StartReceiving;
+
+   end Transmit;
+
    procedure Enable is
    begin
+      --Setup the radio for both sending, eg. TX and receiving eg. RX
+      nRF.Radio.Setup_For_RF_nrf52(Frequency, Nordic_1MBIT, Zero_Dbm,16#12_34_56_78#,HeaderGroup);
+
       --Set/enable the event to trigger a radio interrupt being END (done with receiving package)
-      RADIO_Periph.INTENSET.END_k := Set;
+      nRF.Events.Enable_Interrupt (nRF.Events.Radio_END);
 
       --Assign a function (handler) when an interrupt occurs for radio
       nRF.Interrupts.Register (nRF.Interrupts.RADIO_Interrupt,
@@ -95,20 +121,35 @@ package body MicroBit.Radio is
       --Assing a priority when the radio interrupt occurs
       nRF.Interrupts.Set_Priority(nRF.Interrupts.RADIO_Interrupt, 0); --3 priority bits with 0 being the highest priority?
 
-      --Setup the radio for both sending, eg. TX and receiving eg. RX
-      nRF.Radio.Setup_For_RF_nrf52(2400, Nordic_1MBIT, Zero_Dbm,16#75_62_69_74#,16#1#);
    end Enable;
 
-   procedure SetHeader (Length:UInt8;
+   procedure Setup (RadioFrequency : Radio_Frequency_MHz;
+                        Length:UInt8;
                         Version:UInt8;
                         Group:UInt8;
                         Protocol:UInt8) is
    begin
+   Frequency := RadioFrequency;
    HeaderLength := Length;
    HeaderVersion := Version;
    HeaderGroup := Group;
    HeaderProtocol := Protocol;
-   end SetHeader;
+
+   Enable;
+   end Setup;
+
+   procedure TransmitAndWait is
+   begin
+      --Start transmission
+      nRF.Tasks.Trigger (nRF.Tasks.Radio_TXEN);
+
+      --Wait until done with transmission
+      Clear (Radio_DISABLED);
+      while nrF.Events.Triggered(Radio_DISABLED) = false loop
+         null;
+      end loop;
+
+      end TransmitAndWait;
 
    procedure StartReceiving is
    begin
@@ -120,63 +161,107 @@ package body MicroBit.Radio is
 
       --Start receiving until stopped
       nRF.Tasks.Trigger (nRF.Tasks.Radio_RXEN);
-   end StartReceiving;
 
-   procedure Stop is
+      --Wait until really started up and in RX state
+      Clear(Radio_READY);
+      while nrF.Events.Triggered(Radio_READY) = false loop
+         null;
+      end loop;
+
+      end StartReceiving;
+
+   procedure StopReceiving is
    begin
       --Disable interrupts
       nRF.Interrupts.Disable (nRF.Interrupts.RADIO_Interrupt);
 
       --Trigger to stop
+      Clear (Radio_DISABLED);
       nRF.Tasks.Trigger (nRF.Tasks.Radio_DISABLE);
-   end Stop;
 
+      --Wait until really disabled
+      while nrf.Events.Triggered(Radio_DISABLED) = false loop
+         null;
+      end loop;
+
+   end StopReceiving;
 
    function HeaderOk (Length:UInt8;
-                        Version:UInt8;
-                        Group:UInt8;
-                      Protocol:UInt8) return Boolean is
+                      Group:UInt8) return Boolean is
    begin
       return (Length = HeaderLength) and
-             (Version = HeaderVersion) and
-             (Group = HeaderGroup) and
-             (Protocol = HeaderProtocol);
+             (Group = HeaderGroup);
    end HeaderOk;
 
    procedure Radio_IRQHandler is
      sample : UInt7;
-     begin
-      if (RADIO_Periph.CRCSTATUS.CRCSTATUS = Crcok and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS) then
+   begin
+      --Put("a");
+      --  Put(" CRCOK: " & Boolean'Image(nRF.Events.Triggered(Radio_CRCOK)));
+      --  Put(" CRCERROR: " & Boolean'Image(nRF.Events.Triggered(Radio_CRCERROR)));
+      --  Put(" Group: " & UInt8'Image(nRF.Radio.RxBuf.Group));
+      --  Put(" Data0: " & UInt8'Image(nRF.Radio.RxBuf.Payload(1)));
+      --  Put_Line(" Data1: " & UInt8'Image(nRF.Radio.RxBuf.Payload(2)));
+    --    	if nRF.Events.Triggered(Radio_READY) then
+    --    Clear (Radio_READY);
+    --  nRF.Tasks.Trigger (nRF.Tasks.Radio_START);
+    --    end if;
+    --
+    --    if nRF.Events.Triggered(Radio_END) then
+    --       --Put("b");
+    --
+    --       Clear (Radio_END);
+    --
+    --       if nRF.Events.Triggered(Radio_CRCOK) then
+    --       -- Put(".");
+    --          if HeaderOK(nRF.Radio.RxBuf.Length,
+    --                   nRF.Radio.RxBuf.Version,
+    --                   nRF.Radio.RxBuf.Group,
+    --                   nRF.Radio.RxBuf.Protocol) then
+    --           --  Put(" Group: " & UInt8'Image(nRF.Radio.RxBuf.Group));
+    --
+    --
+    --         --Put_Line(" Data1: " & UInt8'Image(nRF.Radio.RxBuf.Payload(2)));
+    --
+    --          sample := Get_RSSIsample;
+    --          Set_RSSI(-sample);
+    --          QueueRxBuf;
+    --          Set_Packet(RxBuf.all'Address);
+    --          end if;
+    --       else
+    --          Set_RSSI(0);
+    --       end if;
+    --
+    --  nRF.Tasks.Trigger (nRF.Tasks.Radio_START);
+    --  end if;
 
-         if HeaderOK(nRF.Radio.RxBuf.Length,
-                     nRF.Radio.RxBuf.Version,
-                     nRF.Radio.RxBuf.Group,
-                     nRF.Radio.RxBuf.Protocol) then
-            --  Put_Line("L : " & UInt8'Image(nRF.Radio.RxBuf.all.Length));
-            --  Put_Line("V : " & UInt8'Image(nRF.Radio.RxBuf.all.Version));
-            --  Put_Line("G : " & UInt8'Image(nRF.Radio.RxBuf.all.Group));
-            --  Put_Line("P : " & UInt8'Image(nRF.Radio.RxBuf.all.Protocol));
-            --  Put_Line("D0: " & UInt8'Image(nRF.Radio.RxBuf.all.Payload(1)));
-            --  Put_Line("D1: " & UInt8'Image(nRF.Radio.RxBuf.all.Payload(2)));
-            --Put_Line("Received");
-            --Put_Line("Send: " & UInt8'Image(nRF.Radio.Get_QueueDepth));
+       --  Check if we get triggers, if not check frequency, group, balen.
+       --  Put_Line(Boolean'Image(nRF.Events.Triggered(Radio_CRCOK)));
+       if nRF.Events.Triggered(Radio_CRCOK) and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS then
+         --  CRCOK does not mean data OK. In ADA, sometimes we recieve junk packages (see errata 245 https://infocenter.nordicsemi.com/index.jsp?topic=%2Ferrata_nRF52833_Rev2%2FERR%2FnRF52833%2FRev2%2Flatest%2Ferr_833.html&cp=4_1_1_0)
+         --  Put_Line(" Length: " & UInt8'Image(nRF.Radio.RxBuf.Length));
+         --  Put_Line(" Version: " & UInt8'Image(nRF.Radio.RxBuf.Version));
+         --  Put_Line(" Group: " & UInt8'Image(nRF.Radio.RxBuf.Group));
+         --  Put_Line(" Protocol: " & UInt8'Image(nRF.Radio.RxBuf.Protocol));
+
+
+         --BUG: We shouldnt need this headerOK function. In the Arduino repo we get no? junk packages.
+         --Possibly this has been fixed with an errata?
+         --
+            if HeaderOK(nRF.Radio.RxBuf.Length,
+                        nRF.Radio.RxBuf.Group) then
+
             sample := Get_RSSIsample;
-            --  Put_Line("R: " & UInt7'Image(sample));
-
-         -- Associate this packet's rssi value with the data just
-         -- transferred by DMA receive
             Set_RSSI(-sample);
-         -- Now move on to the next buffer, if possible.
-         -- The queued packet will get the rssi value set above.
-         QueueRxBuf;
-         Set_Packet(RxBuf.all'Address);
+            QueueRxBuf;
+            Set_Packet(RxBuf.all'Address);
          else
             Set_RSSI(0);
          end if;
       else
          Set_RSSI(0);
       end if;
-      --Put_Line("trig");
+
       --important otherwise this ISR gets called repeatedly. We can do this anywhere we like in this routine, but at least before trigger RXEN.
       --note that since radio state is no longer in RX so no new interrupts can happen until we trigger RXEN
       Clear (Radio_END);

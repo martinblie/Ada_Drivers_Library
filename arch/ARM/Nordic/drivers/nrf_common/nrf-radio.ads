@@ -111,11 +111,9 @@ package nRF.Radio is
    procedure Set_Mode (Mode : Radio_Mode);
    --  Set radio protocol mode
 
-   type Base_Address_Lenght is new Integer range 1 .. 4;
-
    procedure Set_Logic_Addresses
      (Base0, Base1        : UInt32;
-      Base_Length_In_Byte : Base_Address_Lenght;
+      Base_Length_In_Byte : UInt3;
       AP0, AP1, AP2, AP3, AP4, AP5, AP6, AP7 : UInt8);
    --  Define base a prefix addresses
 
@@ -149,8 +147,8 @@ package nRF.Radio is
    procedure Configure_CRC (Enable        : Boolean;
                             Length        : UInt2;
                             Skip_Address  : Boolean;
-                            Polynomial    : UInt24;
-                            Initial_Value : UInt24)
+                            Polynomial    : UInt32;
+                            Initial_Value : UInt32)
      with Pre => (if Enable then Length /= 0);
 
    function CRC_Error return Boolean;
@@ -161,8 +159,10 @@ package nRF.Radio is
 
    type Length_Field_Endianness is (Little_Endian, Big_Endian);
 
+   type Length_Field_S0 is (LengthZero, LengthIsOne);
+
    procedure Configure_Packet
-     (S0_Field_Size_In_Byte        : Boolean;
+     (S0_Field_Size_In_Byte        : Length_Field_S0;
       S1_Field_Size_In_Bit         : UInt4;
       Length_Field_Size_In_Bit     : UInt4;
       Max_Packet_Length_In_Byte    : Packet_Len;
@@ -183,11 +183,11 @@ package nRF.Radio is
    type fbPtr is access all Framebuffer; --we must encapsulate a pointer to a type in a new type to allow it be freed
 
    type Framebuffer is record
-      Length        : UInt8 := 0; -- The length of the remaining bytes in the packet. includes protocol/version/group fields, excluding the length field itself.
+      Length        : UInt8 := 0; -- The length of the valid bytes in the packet. includes protocol/version/group fields, excluding the length field itself.
       Version       : UInt8 := 0; -- Protocol version code.
       Group         : UInt8 := 0; -- ID of the group to which this packet belongs.
       Protocol      : UInt8 := 0; -- Inner protocol number c.f. those issued by IANA for IP protocols
-      Payload       : Payload_Data := (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+      Payload       : Payload_Data := (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); --32 which is the max packet size
       PtrNext       : fbPtr := null;
       RSSI          : UInt7 := 0;
    end record;
@@ -229,6 +229,7 @@ package nRF.Radio is
 
    RxBuf         : fbPtr := null;
    RxQueue       : fbPtr := null;
+   TxBuf         : fbPtr := new Framebuffer; --only one pointer to buffer made during entire runtime
 private
    IsInit        : Boolean := FALSE;
    Group         : Radio_Group := 1;

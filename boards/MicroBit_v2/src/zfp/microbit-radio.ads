@@ -49,54 +49,56 @@
 --   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 --    DEALINGS IN THE SOFTWARE.
 -----------------------------------------------------------------------------
-with NRF.Radio;
+with NRF.Radio; use nRF.Radio;
 with Hal; use Hal;
 with ada.Unchecked_Deallocation;
 with System.Memory; use System.Memory;
 package MicroBit.Radio is
-   procedure Enable;
 
-   procedure SetHeader (Length:UInt8;
+   -- missing functionality or unexposed API's:
+   -- Set_Frequency (incl. below 2400MHz), Set_Group, Set_Protocol,
+   -- Set_Package_Limit, Set_RadioPower (incl. to 8dB)
+   -- LongRange radio mode
+   -- Low energy mode
+   -- Hybrid BLE/Radio mode
+   -- IEEE 802.15.4 mode
+
+   subtype RadioData is nRF.Radio.Framebuffer;
+
+   procedure Setup (RadioFrequency : Radio_Frequency_MHz;
+                        Length:UInt8;
                         Version:UInt8;
                         Group:UInt8;
                         Protocol:UInt8);
 
    procedure StartReceiving;
 
-   procedure Stop;
+   procedure StopReceiving;
 
-   function State return nRF.Radio.Radio_State;
+   function State return String;
 
    function IsInitialized return Boolean;
 
    function DataReady return Boolean;
 
-   function Receive return nRF.Radio.Framebuffer;
+   function Receive return RadioData;
 
-   --procedure Send (data : access nRF.Radio.Framebuffer)
-    -- with Pre => data /= null and data.Length <= nRF.Radio.MICROBIT_RADIO_MAX_PACKET_SIZE + nRF.Radio.MICROBIT_RADIO_HEADER_SIZE - 1;
+   procedure Transmit (Data : RadioData);
+   --with Pre => data /= null and data.Length <= nRF.Radio.MICROBIT_RADIO_MAX_PACKET_SIZE + nRF.Radio.MICROBIT_RADIO_HEADER_SIZE - 1;
 
-   -- missing or unexposed API's
-   -- set frequency, set group, set protocol, disable,
-   -- set package limit, set speed
-
-   function HeaderOk (Length:UInt8;
-                        Version:UInt8;
-                        Group:UInt8;
-                      Protocol:UInt8) return Boolean;
-
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Object => nRF.Radio.Framebuffer, Name => nRF.Radio.fbPtr);
+   function HeaderOk (Length:UInt8; Group:UInt8) return Boolean;
 
 
 private
-   HeaderLength : Uint8:= 0;
-   HeaderVersion : Uint8:= 0;
-   HeaderGroup : Uint8:= 0;
-   HeaderProtocol : Uint8:= 0;
+   Frequency : Radio_Frequency_MHz;
+   HeaderLength : Uint8;
+   HeaderVersion : Uint8;
+   HeaderGroup : Uint8;
+   HeaderProtocol : Uint8;
 
    procedure Radio_IRQHandler;
-
-   --pragma Export (C, Free, "__gnat_free");
+   procedure TransmitAndWait;
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => nRF.Radio.Framebuffer, Name => nRF.Radio.fbPtr);
 
 end MicroBit.Radio;

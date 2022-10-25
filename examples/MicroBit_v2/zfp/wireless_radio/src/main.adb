@@ -28,53 +28,46 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Radio;
-with nRF.Radio; --we need to refactor a bit more so we dont need this reference
---with MicroBit.Console; use MicroBit.Console;
---with MicroBit.Time; use MicroBit.Time;
-use MicroBit;
+with MicroBit.Radio; use MicroBit.Radio;
 with HAL; use HAL;
+with MicroBit.Console; use MicroBit.Console;
 with MicroBit.Display;
 with MicroBit.Display.Symbols;
+with MicroBit.Time; use MicroBit.Time;
 
+use MicroBit;
 procedure Main is
-
-   data : nRF.Radio.Framebuffer;
+   RXdata : RadioData;
+   TxData : RadioData;
 begin
+   TxData.Length := 5;
+   TxData.Version:= 12;
+   TxData.Group := 1;
+   TxData.Protocol := 14;
 
-   Radio.Enable;
-   Radio.SetHeader(6,12,1,14);
+   Radio.Setup(RadioFrequency => 2407,
+               Length => TxData.Length,
+               Version => TxData.Version,
+               Group => TxData.Group,
+               Protocol => TxData.Protocol);
+
    Radio.StartReceiving;
+   Put_Line(Radio.State); -- this should report Status: 3, meaning in RX mode
 
    loop
---     Delay_Ms(1500);
-      -- check if the buffer is not empty, print the received data to the serial monitor
-      if Radio.DataReady then
-         data :=Radio.Receive;
-         --Put_Line("Read" & UInt8'Image(nRF.Radio.Get_QueueDepth));
-         --  Put_Line("L : " & UInt8'Image(data.Length));
-         --  Put_Line("V : " & UInt8'Image(data.Version));
-         --  Put_Line("G : " & UInt8'Image(data.Group));
-         --  Put_Line("P : " & UInt8'Image(data.Protocol));
-         --  Put_Line("D0: " & UInt8'Image(data.Payload(1)));
-         --Put_Line("D1: " & UInt8'Image(data.Payload(2)));
+      --check if some data received and if so print it. Note that the framebuffer can max contain x messages (currently set to 4).
+      while Radio.DataReady loop
+         RXdata :=Radio.Receive;
+         Put("Read D1: " & UInt8'Image(RXdata.Payload(1)));
+         Put_Line(" D2: " & UInt8'Image(RXdata.Payload(2)));
+      end loop;
 
-         if data.Payload(1) =0 then
-               if data.Payload(2) /= 0 then
-                  Display.Symbols.Heart;
-               else
-                  Display.Clear;
-               end if;
-         end if;
+      -- setup some data to be transmitted and transmit it
+      TxData.Payload(1) := 80;
+      TxData.Payload(2) := 14;
+      Radio.Transmit(TXdata);
 
-         if data.Payload(1) =1 then
-               if data.Payload(2) /= 0 then
-                Display.Display("Mat?");
-             else
-                Display.Clear;
-             end if;
-         end if;
-
-      end if;
+      --repeat every 500 ms
+      Delay_Ms(500);
    end loop;
 end Main;
