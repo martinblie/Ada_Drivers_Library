@@ -51,10 +51,12 @@
 -----------------------------------------------------------------------------
 with NRF.Radio; use nRF.Radio;
 with Hal; use Hal;
+with Ada.Interrupts.Names;
 
 package MicroBit.Radio is
 
    -- missing functionality or unexposed API's:
+   -- non pointer queue functionality after removing working pointer mechanism (see earlier commits) but needed a few hacks to enable in ZFP. A solution for both runtimes was thus needed
    -- Set_Frequency (incl. below 2400MHz), Set_Group, Set_Protocol,
    -- Set_Package_Limit, Set_RadioPower (incl. to 8dB)
    -- LongRange radio mode
@@ -87,7 +89,6 @@ package MicroBit.Radio is
 
    function HeaderOk (Length:UInt8; Group:UInt8) return Boolean;
 
-
 private
    Frequency : Radio_Frequency_MHz;
    HeaderLength : Uint8;
@@ -95,7 +96,11 @@ private
    HeaderGroup : Uint8;
    HeaderProtocol : Uint8;
 
-   procedure Radio_IRQHandler;
+   protected Radio is
+      procedure Radio_IRQHandler;
+      pragma Attach_Handler (Radio_IRQHandler, Ada.Interrupts.Names.RADIO_Interrupt);
+   end Radio;
+
    procedure TransmitAndWait;
 
 end MicroBit.Radio;

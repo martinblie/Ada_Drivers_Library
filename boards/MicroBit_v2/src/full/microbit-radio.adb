@@ -54,7 +54,6 @@ package body MicroBit.Radio is
    function Receive return RadioData is
    begin
       if DataReady then
-
          -- Protect shared resource from ISR activity
          nRF.Interrupts.Disable (nRF.Interrupts.RADIO_Interrupt);
 
@@ -94,8 +93,10 @@ package body MicroBit.Radio is
       -- Return the radio to using the default receive buffer
       --Set_Packet(RxQueue(Get_QueueDepth)'Address);
       Set_Packet(RxBuf'Address);
+
       -- Start receiving AGAIN
       StartReceiving;
+
 
    end Transmit;
 
@@ -108,8 +109,8 @@ package body MicroBit.Radio is
       nRF.Events.Enable_Interrupt (nRF.Events.Radio_END);
 
       --Assign a function (handler) when an interrupt occurs for radio
-      nRF.Interrupts.Register (nRF.Interrupts.RADIO_Interrupt,
-                              Radio_IRQHandler'Access);
+      --nRF.Interrupts.Register (nRF.Interrupts.RADIO_Interrupt,
+       --                       Radio_IRQHandler'Access);
 
       --Assing a priority when the radio interrupt occurs
       nRF.Interrupts.Set_Priority(nRF.Interrupts.RADIO_Interrupt, 0); --3 priority bits with 0 being the highest priority?
@@ -131,18 +132,7 @@ package body MicroBit.Radio is
    Enable;
    end Setup;
 
-   procedure TransmitAndWait is
-   begin
-      --Start transmission
-      nRF.Tasks.Trigger (nRF.Tasks.Radio_TXEN);
 
-      --Wait until done with transmission
-      Clear (Radio_DISABLED);
-      while nrF.Events.Triggered(Radio_DISABLED) = false loop
-         null;
-      end loop;
-
-      end TransmitAndWait;
 
    procedure StartReceiving is
    begin
@@ -182,18 +172,32 @@ package body MicroBit.Radio is
    function HeaderOk (Length:UInt8;
                       Group:UInt8) return Boolean is
    begin
-      return (Length = HeaderLength) and
-             (Group = HeaderGroup);
+      return (Length = HeaderLength) and (Group = HeaderGroup);
    end HeaderOk;
 
-   procedure Radio_IRQHandler is
-      sample : UInt7;
+   procedure TransmitAndWait is
    begin
+      --Start transmission
+      nRF.Tasks.Trigger (nRF.Tasks.Radio_TXEN);
+
+      --Wait until done with transmission
+      Clear (Radio_DISABLED);
+      while nrF.Events.Triggered(Radio_DISABLED) = false loop
+         null;
+      end loop;
+
+   end TransmitAndWait;
+
+   protected body Radio is
+      procedure Radio_IRQHandler is
+      sample : UInt7;
+      begin
+
+
        if nRF.Events.Triggered(Radio_CRCOK) and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS then
          --  CRCOK does not mean data OK. In ADA, sometimes we recieve junk packages (see errata 245 https://infocenter.nordicsemi.com/index.jsp?topic=%2Ferrata_nRF52833_Rev2%2FERR%2FnRF52833%2FRev2%2Flatest%2Ferr_833.html&cp=4_1_1_0)
          --BUG: We shouldnt need this headerOK function. In the Arduino repo we get no? junk packages.
          --Possibly this has been fixed with an errata?
-         --
             if HeaderOK(nRF.Radio.RxBuf.Length,
                         nRF.Radio.RxBuf.Group) then
 
@@ -201,7 +205,7 @@ package body MicroBit.Radio is
             Set_RSSI(-sample);
 
             -- Store the received RSSI value in the frame
-            --RxQueue(Get_QueueDepth).RSSI := Get_RSSI;
+            -- RxQueue(Get_QueueDepth).RSSI := Get_RSSI;
             RxBuf.RSSI := Get_RSSI;
 
             -- Increase our received packet count
@@ -221,6 +225,5 @@ package body MicroBit.Radio is
       Clear (Radio_END);
       nRF.Tasks.Trigger (nRF.Tasks.Radio_RXEN); --due to short setup it will go from RXEN to RXRU to START to RX
    end Radio_IRQHandler;
-
-
+   end Radio;
 end MicroBit.Radio;

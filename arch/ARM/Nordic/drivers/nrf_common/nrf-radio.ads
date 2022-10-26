@@ -99,7 +99,7 @@ package nRF.Radio is
    procedure Disable_Shortcut (Short : Shortcut);
    --  Disable event to task shortcut
 
-   procedure Set_Packet (Address : System.Address);
+   procedure Set_Packet (PacketAddress : System.Address);
    --  Set packet address for RX or TX
 
    procedure Set_Frequency (F : Radio_Frequency_MHz);
@@ -178,24 +178,14 @@ package nRF.Radio is
    type Payload_Data is array (1 .. MICROBIT_RADIO_MAX_PACKET_SIZE)
      of UInt8 with Volatile;
 
-   type Framebuffer; -- we need to declare it incomplete first
-
-   type fbPtr is access all Framebuffer; --we must encapsulate a pointer to a type in a new type to allow it be freed
-
    type Framebuffer is record
       Length        : UInt8 := 0; -- The length of the valid bytes in the packet. includes protocol/version/group fields, excluding the length field itself.
       Version       : UInt8 := 0; -- Protocol version code.
       Group         : UInt8 := 0; -- ID of the group to which this packet belongs.
       Protocol      : UInt8 := 0; -- Inner protocol number c.f. those issued by IANA for IP protocols
       Payload       : Payload_Data := (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); --32 which is the max packet size
-      PtrNext       : fbPtr := null;
       RSSI          : UInt7 := 0;
    end record;
-
-   --for fbPtr'Storage_Size use 4;
-
-   --This procedure is specifically for freeing memory referred to by the framebuffer pointer
-  --procedure Free is new Ada.Unchecked_Deallocation (Object => Framebuffer, Name => fbPtr);
 
    subtype Radio_Address is UInt32;
 
@@ -217,28 +207,32 @@ package nRF.Radio is
 
   function Get_QueueDepth return UInt8;
 
-  procedure DeepCopyIntoSafeFramebuffer (framebufferPtr : fbPtr);
+  procedure DeepCopyIntoSafeFramebuffer (queueIndex : UInt8);
 
   function Get_RSSIsample return  UInt7;
 
   procedure Set_RSSI (rssi_value : UInt7)
     with Pre => IsInitialized;
 
-  procedure QueueRXBuf
-    with Pre => RxBuf /= NULL and Get_QueueDepth < MICROBIT_RADIO_MAXIMUM_RX_BUFFERS;
-
-   RxBuf         : fbPtr := null;
-   RxQueue       : fbPtr := null;
-   TxBuf         : fbPtr := new Framebuffer; --only one pointer to buffer made during entire runtime
-private
-   IsInit        : Boolean := FALSE;
-   Group         : Radio_Group := 1;
-   rssi          : UInt7 := 0;
-   QueueDepth    : Uint8 :=  0;
-   SafeFramebuffer  : Framebuffer;
-
    function Get_RSSI return UInt7
       with Pre => IsInitialized;
+
+   type RxQueueArray is array (0 .. MICROBIT_RADIO_MAXIMUM_RX_BUFFERS) of Framebuffer;
+
+   RxBuf         : Framebuffer;
+   TxBuf         : Framebuffer;
+   RxQueue       : RxQueueArray;
+private
+   IsInit        : Boolean := FALSE;
+   Group         : Radio_Group;
+   rssi          : UInt7;
+   QueueDepth    : Uint8 := 0;
+   SafeFramebuffer  : Framebuffer; --is it really safe though as technically we can still write to RXBuf
+                                   --while reading and copying to Safeframebuffer since we dont use locks/semaphores/barriers
+                                   --this could for example happen when we are receiving more packages than we can process,
+                                   --thus overwriting the last framebuffer in the queue while potentailly reading and copying from it
+
+
 
    procedure Set_Nrf52FastRampup;
 

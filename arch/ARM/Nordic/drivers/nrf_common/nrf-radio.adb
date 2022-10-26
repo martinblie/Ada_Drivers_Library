@@ -30,7 +30,7 @@
 ------------------------------------------------------------------------------
 
 with NRF_SVD.RADIO; use NRF_SVD.RADIO;
-with System.Storage_Elements; use System.Storage_Elements;
+with System.Storage_Elements;
 with nRF.Clock;     use nRF.Clock;
 with Cortex_M.NVIC; use Cortex_M.NVIC;
 
@@ -71,19 +71,6 @@ package body nRF.Radio is
         -- Not all API's are exposed with functions, eg. disable, gpio at compare, etc.
         -- Not all ranges are exposed, eg. with frequency we can also choose 40 Mhz lower than 2400, so the full range is acstually between 2360-2500 in 1MHz steps
         -- The setup of parameters is done at startup, not at runtime. See examples in repo's on how to implement.
-
-      --The new keyword is used for dynamically allocated memory
-      --It request a memory region of size framebuffer on the heap and the address pointer points to the first element of that region.
-      --We use this pointer that it can be used by the radio receiver using EasyDMA, allowing it write the received framebuffer to it.
-      --If the request is denied, for example because the heap is full, get a null pointer back, so we always need to check for this
-      --It also means that we need to free the allocated memory if we dont use them or the heap will become full.
-      --We free the memory when we are fully done with it, so after we removed it from the rxqueue (receive function).
-      --In ADA we try to avoid using pointers, so this example could be improved: https://en.wikibooks.org/wiki/Ada_Programming/Types/access
-       RxBuf := new Framebuffer;
-       if RxBuf = null then --is this ever null in ADA?
-          return;
-       end if;
-
 
       --Enable the High Frequency clock on the processor. This is a pre-requisite for
 	   --the RADIO module. Without this clock, no communication is possible.
@@ -173,7 +160,8 @@ package body nRF.Radio is
 
    Set_Nrf52FastRampup;
 
-   Set_Packet(RxBuf.all'Address);
+   --Set_Packet(RxQueue(Get_QueueDepth)'Address);
+   Set_Packet(RxBuf'Address);
 
       -- Using shorts is much faster than manual state transition from disabled to RX state due to CPU cycles. For a manual example see nrf52 library repo
       -- Check fig. 6 in the manual
@@ -279,21 +267,34 @@ package body nRF.Radio is
       QueueDepth := newDepth;
 end Set_QueueDepth;
 
-   procedure DeepCopyIntoSafeFramebuffer (framebufferPtr : fbPtr) is
-      data :Payload_Data;
+  procedure DeepCopyIntoSafeFramebuffer (queueIndex : UInt8) is
    begin
-      SafeFramebuffer.Length := framebufferPtr.Length;
-      SafeFramebuffer.Version := framebufferPtr.Version;
-      SafeFramebuffer.Group := framebufferPtr.Group;
-      SafeFramebuffer.Protocol := framebufferPtr.Protocol;
-      SafeFramebuffer.RSSI := framebufferPtr.RSSI;
-      SafeFramebuffer.PtrNext := null;
+      SafeFramebuffer.Length := RxBuf.Length;
+      SafeFramebuffer.Version := RxBuf.Version;
+      SafeFramebuffer.Group := RxBuf.Group;
+      SafeFramebuffer.Protocol := RxBuf.Protocol;
+      SafeFramebuffer.RSSI := RxBuf.RSSI;
 
-      for i in data'Range loop
-       data(i) := framebufferPtr.Payload(i);
+      for i in  RxBuf.Payload'Range loop
+       SafeFramebuffer.Payload(i) := RxBuf.Payload(i);
       end loop;
 
-      SafeFramebuffer.Payload := data;
+      --  SafeFramebuffer.Length := RxQueue(queueIndex).Length;
+      --  SafeFramebuffer.Version := RxQueue(queueIndex).Version;
+      --  SafeFramebuffer.Group := RxQueue(queueIndex).Group;
+      --  SafeFramebuffer.Protocol := RxQueue(queueIndex).Protocol;
+      --  SafeFramebuffer.RSSI := RxQueue(queueIndex).RSSI;
+      --
+      --  for i in  RxQueue(queueIndex).Payload'Range loop
+      --   SafeFramebuffer.Payload(i) := RxQueue(queueIndex).Payload(i);
+      --  end loop;
+
+      --  Put("Queueindex: " & UInt8'Image(queueIndex));
+      --  Put(" rD1: " & UInt8'Image(RxQueue(queueIndex).Payload(1)));
+      --  Put(" rD2: " & UInt8'Image(RxQueue(queueIndex).Payload(2)));
+      --  Put(" sD1: " & UInt8'Image(SafeFramebuffer.Payload(1)));
+      --  Put_Line(" sD2: " & UInt8'Image(SafeFramebuffer.Payload(2)));
+
    end DeepCopyIntoSafeFramebuffer;
 
    ----------------------
@@ -354,56 +355,14 @@ end Set_QueueDepth;
    end Get_RSSI;
 
    ----------------
-   -- QueueRxBuf --
-   ----------------
-
-   procedure QueueRxBuf
-   is
-       p : fbPtr;
-       NewRxBuf : fbPtr;
-   begin
-
-      NewRxBuf := new FrameBuffer;
-      --  if NewRxBuf = null then --is this never null in ADA?
-      --     return;
-      --  end if;
-
-      -- Store the received RSSI value in the frame
-      RxBuf.all.rssi := Get_RSSI;
-
-      -- We add to the tail of the queue to preserve causal ordering.
-      RxBuf.all.PtrNext := null;
-
-      if RxQueue = null then
-     		RxQueue := RxBuf;
-      else
-          p := RxQueue;
-
-          while p.all.PtrNext /= null  loop
-             p := p.all.PtrNext;
-          end loop;
-
-		    p.all.PtrNext := RxBuf;
-	   end if;
-
-	-- Increase our received packet count
-	QueueDepth := QueueDepth +1;
-
-   -- Allocate a new buffer for the receiver hardware to use. the old on will be passed on to higher layer protocols/apps.
-	RxBuf := newRxBuf;
-
-   end QueueRxBuf;
-
-
-   ----------------
    -- Set_Packet --
    ----------------
 
    procedure Set_Packet
-     (Address : System.Address)
+     (PacketAddress : System.Address)
    is
    begin
-      RADIO_Periph.PACKETPTR := UInt32 (To_Integer (Address));
+      RADIO_Periph.PACKETPTR :=  UInt32 (System.Storage_Elements.To_Integer (PacketAddress));
    end Set_Packet;
 
    -------------------
