@@ -56,15 +56,13 @@ package body MicroBit.Radio is
       if DataReady then
 
          -- Protect shared resource from ISR activity
-         nRF.Interrupts.Disable (nRF.Interrupts.RADIO_Interrupt);
+        -- nRF.Interrupts.Disable (nRF.Interrupts.RADIO_Interrupt);
 
-         --copy content of p into object (eg we move from unsafe dynamically created and destroyed framebuffers due to pointer to a safe reusable at runtime created framebuffer)
-         DeepCopyIntoSafeFramebuffer(Get_QueueDepth);
 
          Set_QueueDepth(Get_QueueDepth -1);
 
 		  -- Allow ISR access to shared resource
-         nRF.Interrupts.Enable (nRF.Interrupts.RADIO_Interrupt);
+         --nRF.Interrupts.Enable (nRF.Interrupts.RADIO_Interrupt);
       end if;
 
       return Get_SafeFramebuffer;
@@ -203,6 +201,8 @@ package body MicroBit.Radio is
             -- Store the received RSSI value in the frame
             --RxQueue(Get_QueueDepth).RSSI := Get_RSSI;
             RxBuf.RSSI := Get_RSSI;
+
+            DeepCopyIntoSafeFramebuffer(Get_QueueDepth);
 
             -- Increase our received packet count
             Set_QueueDepth(Get_QueueDepth +1);
