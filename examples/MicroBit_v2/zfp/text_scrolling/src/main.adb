@@ -33,6 +33,7 @@ with MicroBit.Display; use MicroBit.Display;
 procedure Main is
 
 begin
-   --Note that this keeps looping! Explore the Set and Clear API in Microbit.Display to set and clear individual pixels
+   --Explore the Set and Clear API in Microbit.Display to set and clear individual pixels
+   --Note that the message keeps looping because the Micro:Bit reboots after it is done with displaying the whole text!
    Display ("ADA");
 end Main;

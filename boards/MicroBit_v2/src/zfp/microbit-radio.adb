@@ -202,7 +202,7 @@ package body MicroBit.Radio is
             --RxQueue(Get_QueueDepth).RSSI := Get_RSSI;
             RxBuf.RSSI := Get_RSSI;
 
-            DeepCopyIntoSafeFramebuffer(Get_QueueDepth);
+            DeepCopyIntoSafeFramebuffer;
 
             -- Increase our received packet count
             Set_QueueDepth(Get_QueueDepth +1);

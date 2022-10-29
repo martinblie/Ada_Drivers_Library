@@ -28,52 +28,22 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Radio;
-with nRF.Radio; use nRF.Radio;
-with MicroBit.Console; use MicroBit.Console;
+with MicroBit.Console;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 use MicroBit;
-with HAL; use HAL;
-with Ada.Real_Time; use Ada.Real_Time;
 
 procedure Main is
-
-   data : access nRF.Radio.Framebuffer;
-   queue: Boolean;
-
+   -- a range between 0 and 1023 meaning 0V to 3.3V
+   Value : Analog_Value;
 begin
-   -- enable the micro:bit radio using default settings like channel, speed, power, protocol, etc.
-   Put(Boolean'Image(Radio.IsEnabled));
-   Radio.Enable;
-   Put(Radio_State'Image(Radio.Status));
+  loop
+     --  Read analog value of microbit pin 1
+     Value := Analog (1);
 
-   loop
-      queue := Radio.DataReady;
-      Put("-");
-      delay(0.5);
+     -- Put read value onto serial monitor
+     Console.Put(Integer'Image(Integer(Value)));
 
-      -- check if the buffer is not empty, print the received data to the serial monitor
-      if Radio.DataReady then
-          Put("got data");
-         --copy the receive buffer of the radio
-          data := Radio.Receive;
-
-         --the header information.
-          Put(UInt8'Image(data.Length));
-          Put("  ");
-          Put(UInt8'Image(data.Version));
-          Put("  ");
-          Put(UInt8'Image(data.Group));
-          Put("  ");
-          Put(UInt8'Image(data.Protocol));
-          Put("  ");
-
-         --The actual data. note we only print the 1st byte of data, there could be more.
-         Put_Line(UInt8'Image(data.Payload(1)));
-
-         --is this needed?
-         --deallocate (free) the data as it will be dangling after the  next assignment.
-         --Destroy (data);
-       end if;
+     -- Wait 100 ms for next read
+	  delay (0.1);
    end loop;
 end Main;
-

@@ -29,24 +29,27 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with MicroBit.IOsForTasking;
-with Ada.Real_Time; use Ada.Real_Time;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 
---The classical blinking demo demonstrating switching pin 0 high and low in .5 sec interval
 procedure Main is
-   pin : MicroBit.IOsForTasking.Pin_Id:= 19;
+   pin1 : constant Pin_Id := 1;
+   pinIsActive : Boolean := False;
+
 begin
-  loop
-      --  Turn on the LED connected to pin 0
-      MicroBit.IOsForTasking.Set (pin, True);
+     -- write micro:bit v2 pin 1 to high
+     -- The API is horrible. Set(pin) for reading and Set(pin,value) for writing
+     -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value)
+     Set (pin1, True);
+
+   loop
+      -- Toggle between True and False, making pin1 high and low
+      pinIsActive := not pinIsActive;
+
+      --Write to pin1
+      Set (pin1, pinIsActive);
 
       --  Wait 500 milliseconds
-      delay until Clock + Milliseconds(500);
+      delay(0.5);
 
-      --  Turn off the LED connected to pin 0
-      MicroBit.IOsForTasking.Set (pin, False);
-
-      --  Wait 500 milliseconds
-      delay until Clock + Milliseconds(500);
    end loop;
 end Main;

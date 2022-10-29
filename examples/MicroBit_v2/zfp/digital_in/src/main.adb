@@ -45,9 +45,6 @@ begin
    -- write to serial monitor
    Console.Put(Boolean'Image(isSignalHigh));
 
-   -- wait 1 second before continuing
-   Delay_ms(1000);
-
  loop
      --  continuous check if micro:bit v2 pin 1 is high or low
       if MicroBit.IOs.Set (0) then

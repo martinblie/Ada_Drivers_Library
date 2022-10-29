@@ -61,8 +61,7 @@ package MicroBit.IOs is
    --  Set the period (in microseconds) of the PWM signal for all analog output
    --  pins.
 
-   procedure Write (Pin : Pin_Id; Value : Analog_Value)
-     with Pre => Supports (Pin, Analog);
+   procedure Write (Pin : Pin_Id; Value : Analog_Value);
 
    function Analog (Pin : Pin_Id) return Analog_Value
      with Pre => Supports (Pin, Analog);

@@ -40,6 +40,27 @@ with nRF.Events;                use nRF.Events;
 with nRF.Interrupts;            use nRF.Interrupts;
 
 package body MicroBit.IOsForTasking is
+   --  SB: Implementation constraints:
+   --  - Analog OUT allowed only on the 6 (exposed) analog IN pins while Nordic documentation says you can use any pin.
+   --    This implementation is wrong, only analog IN should be resticted and devices like ADC need to know the exact AIN pin for correct behavior.
+   --  - PWM channels of the PWM peripheral is 12, while Timer 3, 4 both have 5 channels, and Timer 0,1,2 have 3 channels for a total of 31 PWM channels. Largest implementation I have found on the Noric forums is 18 channels
+   --  - Timer + PPI based implementation. Most timers have 4, but some have 6 channels meaning 5 duty cycles channels and 1 period channel\
+   --  - Alternative is a pwm peripheral implementation which is fully hardware based needing no interrupts.
+   --  - Fix to have more PWM channels (eg. a cars needs 4 PWM) is use another timer. Since this is such a common case we should implement a timer with 6 channels
+   --  - 250 KHz timer frequency is used probably to save energy. For a PWM signal with period 20.000 us or 50 Hz,
+   --    The range set in ADA is 0-1023 corresponding to 0 and 3.3V but also 0 to 100% duty cycle.
+   --    example w/50 Hz: a 1% dutycycle (value 10) results in 200us signal = 5 KHz, well within 250 KHz.
+   --    example w/50 Hz: a .1% dutycycle (value 1, the limit) results in 20us signal = 50 KHz, well within 250 KHz.
+   --    There should be a limit to Set_Analog_Period_Us. The scope shows a deviation of 10 us which become relevant at high frequencies eg <100 us periods. At very high frequences, the duty cycle will not work as expected, inspect this with a scope.
+   --    A safe bandwidth is a maximum of 100 us, which becomes 110us.
+   --    The very first cycle is 20 us when period set to 1000 us and Write (pin,10) Every next pulse is 10us
+   --    I have not investigated where this 10us delay or this 10us delay for the first cycle only comes from, possibly from the restart and interrupts? A hardware PWM device should not have this
+   --    In this new version I updated the frequency to 16 MHz and set the timer to 3 to allow 4 out 5 PWM channels and removed the constrained to be AIN pins
+   --    The reason why we cannot use all 5 channels is due to the limit of 8 PPI channels and the requirement of 2 channels per pin. Although the period signal is the same for all, a PPI channel can not be assigned to multiple pins.
+   --    We have enough GPIOTE channels for other packages, but this package now blocks all the PPI for other functionality.
+   --    Using the hardware PWM driver would be better as there are 12 channels and no requirement for PPI and GPIOTE
+   --
+								  
 
    --  The analog out feature is implemented as PWM signal. To generate the PWM
    --  signals we use a timer with the configuration described bellow.
@@ -99,9 +120,8 @@ package body MicroBit.IOsForTasking is
 
    -- PWM --
 
-   Number_Of_PWMs : constant := 3;
-   --note that in theory any pin can be a software pwm like in https://github.com/bbcmicrobit/micropython/blob/a92ca9b1f907c07a01116b0eb464ca4743a28bf1/source/lib/pwm.c
-   --also see https://www.arduino.cc/en/Tutorial/SecretsOfArduinoPWM
+   Number_Of_PWMs : constant := 4; --Timer 0 has 4 compare channels of which we need 1 for the period.
+                                   --Timer 3 has 6 compare channels, so 5 PWMs
 
    type PWM_Allocated is range 0 .. Number_Of_PWMs;
    subtype PWM_Id is PWM_Allocated range 0 .. Number_Of_PWMs - 1;
@@ -110,16 +130,20 @@ package body MicroBit.IOsForTasking is
 
    PWM_Alloc : array (Pin_Id) of PWM_Allocated := (others => No_PWM);
 
-   PWM_Timer          : Timer renames Timer_0;
-   PWM_Interrupt      : constant Interrupt_Name := TIMER0_Interrupt;
-   PWM_Global_Compare : constant Timer_Channel := 3;
-   PWM_Precision      : constant := 4;
-   PWM_Period         : UInt32 := 2_000 / PWM_Precision;
+   PWM_Timer          : Timer renames Timer_3;
+   PWM_Interrupt      : constant Interrupt_Name := TIMER3_Interrupt;
+   PWM_Global_Compare : constant Timer_Channel := 4; --The last compare channel: Timer0 uses channel 3, Timer 3 uses channel 5;
+   PWM_Precision      : constant := 16; -- This value depends on the prescaler and must be an integer
+                                        -- Note that if prescaler is higher than 1 MHz (eg. 3 and lower) we divide by resolution (see Set_Analog_Period_Us)
+                                        -- Examples: Prescaler 6 is 250 KHz so resolution is 4 (4*250=1000)
+                                        -- Prescaler 0 is 16 MHz so resolution is 16 (16/16=1)
+   PWM_Period         : UInt32; -- Per IOs package (actually per timer) we have the same period for all pins
+
 
    type PWM_Status is record
       Taken       : Boolean := False;
       Pulse_Width : Analog_Value;
-      Cmp         : UInt32 := 10;
+      Cmp         : UInt32;
       Pin         : Pin_Id;
    end record;
 
@@ -135,10 +159,8 @@ package body MicroBit.IOsForTasking is
           Post => not Has_PWM (Pin);
    procedure Configure_PPI (Id : PWM_Id);
    procedure Configure_GPIOTE (Id : PWM_Id);
-  -- procedure Init_PWM_Timer;
    function To_Compare_Value (V : Analog_Value) return UInt32;
-  -- procedure PWM_Timer_Handler;
-
+ 
    ----------------------
    -- To_Compare_Value --
    ----------------------
@@ -301,8 +323,8 @@ package body MicroBit.IOsForTasking is
 
    procedure Set_Analog_Period_Us (Period : Natural) is
    begin
-      PWM_Period := UInt32 (Period) / PWM_Precision;
-
+      PWM_Period := UInt32 (Period) * PWM_Precision; -- !! change to divide by PWM_precision if prescaler is lower than 1 MHz
+	  
       --  Update the comparator values for ech PWM
       for PWM of PWMs loop
          PWM.Cmp := To_Compare_Value (PWM.Pulse_Width);
@@ -351,8 +373,14 @@ package body MicroBit.IOsForTasking is
          PWM_Timer.Start;
       end if;
 
-      PWMs (PWM_Alloc (Pin)).Pulse_Width := Value;
-      PWMs (PWM_Alloc (Pin)).Cmp := To_Compare_Value (Value);
+if Value = 0 then
+         Deallocate_PWM (Pin); -- force the signal to be zero, can we do this more elegantly with pull down and pull up and disconnect to PPI?
+                               -- also, when Value = 1023 (max) it is rounded to PWM_period -1 in the To Compare Value function, meaning a single 16 MHz clock cycle of 62 ns where the signal goes down and then up (noise). Can be improved.
+      else
+         PWMs (PWM_Alloc (Pin)).Pulse_Width := Value;
+         PWMs (PWM_Alloc (Pin)).Cmp := To_Compare_Value (Value);
+      end if;
+	  
    end Write;
 
    ------------
@@ -373,7 +401,7 @@ package body MicroBit.IOsForTasking is
       end if;
 
       Result := Do_Pin_Conversion (Pin   => (case Pin is
-                                             --We have 8 analog channels on the MCU, but only 7 are exposed, AIN5 cannot be used, check the pin assingments from nRF52833 manual for correct analog channel ordering
+                                             --We have 8 analog channels on the MCU, but only 6 are exposed, AIN5 cannot be used and AIN 3(pin 29) is internal for the microphone, check the pin assingments from nRF52833 manual for correct analog channel ordering
                                              --https://infocenter.nordicsemi.com/pdf/nRF52833_PS_v1.3.pdf
                                        --MB pin id   => Analog channel
                                          when 0      => 0,
@@ -405,7 +433,8 @@ package body MicroBit.IOsForTasking is
       PWM_Timer.Set_Compare (0, PWMs (0).Cmp);
       PWM_Timer.Set_Compare (1, PWMs (1).Cmp);
       PWM_Timer.Set_Compare (2, PWMs (2).Cmp);
-
+	  PWM_Timer.Set_Compare (3, PWMs (3).Cmp); -- only if timer support 5 compare channels!
+      --PWM_Timer.Set_Compare (4, PWMs (4).Cmp); --we dont have enough PPI channels to enable 5
       PWM_Timer.Start;
    end PWM_Timer_Handler;
 
@@ -416,12 +445,12 @@ package body MicroBit.IOsForTasking is
    procedure Init_PWM_Timer is
    begin
       PWM_Timer.Set_Mode (Mode_Timer);
-      PWM_Timer.Set_Prescaler (6);
+      PWM_Timer.Set_Prescaler (0); -- 6 is 250 KHz, 0 is 16 MHz
       PWM_Timer.Set_Bitmode (Bitmode_32bit);
 
       --  Clear counter internal register and stop when timer reaches compare
-      --  value 3.
-      PWM_Timer.Compare_Shortcut (Chan  => PWM_Global_Compare,
+      --  value 3 or 5 depending on chosen timer.
+	        PWM_Timer.Compare_Shortcut (Chan  => PWM_Global_Compare,
                                   Stop  => True,
                                   Clear => True);
 

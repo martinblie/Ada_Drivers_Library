@@ -28,97 +28,47 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
---with Ada.Text_IO; use Ada.Text_IO;
-with MicroBit.IOsForTasking;
-with MicroBit.IOsForTaskingTimer1;
-With NRF_SVD.PWM; use NRF_SVD.PWM;
-with nRF.Tasks;   use nRF.Tasks;
-WITH HAL; USE HAL;
-with System.Storage_Elements;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
+with MicroBit;
+with MicroBit.Console; use MicroBit.Console; -- use Baudrate 115200 to see serial port output
 
---with Ada.Real_Time; use Ada.Real_Time;
---with MicroBit.TimeWithRTC1; use MicroBit.TimeWithRTC1;
 procedure Main is
-   type My_Int_Array is array (1 .. 4) of UInt16;
-   pwm_seq :  My_Int_Array := (50, 50, 50, 50);
+   -- a range between 0 and 1023 meaning 0V to 3.3V
+   Value : constant Analog_Value := 76;
 begin
-   --   	 MicroBit.IOsForTasking.Set_Analog_Period_Us(10);
-   PWM0_Periph.PSEL.OUT_k(0).PIN := 2;
-   PWM0_Periph.PSEL.OUT_k(0).CONNECT := Connected;
-   PWM0_Periph.PSEL.OUT_k(1).PIN := 3;
-   PWM0_Periph.PSEL.OUT_k(1).CONNECT := Connected;
-   PWM0_Periph.ENABLE.ENABLE := Enabled;
-  
-   PWM0_Periph.MODE.UPDOWN := Up;
-   PWM0_Periph.PRESCALER.PRESCALER := Div_1;
-   PWM0_Periph.COUNTERTOP.COUNTERTOP := 100; --1MSEC
-   PWM0_Periph.LOOP_k.CNT := Disabled;
+   -- To create an analog output signal we need frequency and amplitude
    
-   --NRF_PWM0->SEQ[0].PTR = ((uint32_t)(pwm_seq) << PWM_SEQ_PTR_PTR_Pos);
-   PWM0_Periph.SEQ (0).PTR := UInt32(System.Storage_Elements.To_Integer (pwm_seq'Address));
+   --  We set the frequency by setting the period (remember f=1/t).
+   Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
    
-   --NRF_PWM0->SEQ[0].CNT = ((sizeof(pwm_seq) / sizeof(uint16_t)) << PWM_SEQ_CNT_CNT_Pos);
-   PWM0_Periph.SEQ (0).CNT.CNT := Disabled; -- actually 4
-   PWM0_Periph.SEQ (0).REFRESH.CNT:= Continuous;
-   PWM0_Periph.SEQ (0).ENDDELAY.CNT := 0;
-   Trigger(PWM_SEQSTART_0);
-      -- MicroBit.IOsForTaskingTimer1.Set_Analog_Period_Us(10);
-  loop
-   null;
-	  --  This generates a PWM signal without the servo library
-     --  Loop for value between 30 and 100. Note that this range is not checking boundaries, 1023 is the max.
-	  --  When using with a servo, this first sets the interval period (20ms=50Hz), and the dutycycle to 30/1023 = 2.9% to 9.75%
-	  --  The spec says duty cycle is 0.5 ms/20ms = 2.5%  (-90 degree) 
-	  --                              1.5 ms/20ms = 7.5% ( 0 degree) 
-	  --                              2.5 ms/20ms = 12.5% ( +90 degree) 
-	  -- https://components101.com/motors/mg995-servo-motor
+   --  To set the amplitude we use a trick called duty cycle. For example:
+   --  A 100% duty cycle means a DC signal (always up), eg the frequency is 0, despite being set.
+   --  A 50% duty cycle means on average 1.65V but it also means 50% the pulse is up at 3.3V and 50% the pulse is down at 0V.
+   --  A 10% duty cycle means 10% of 3.3V = on average 0.33V: 10% up, 90% down.
+   Write (0, Value);
+   
+   --  Wait 5 seconds
+   delay(5.0);
+   
+   loop
+	-- Generating PWM signal to control a servo motor without a motor library
+   -- First look at the data sheet of the motor for example: https://components101.com/motors/mg995-servo-motor
+	   
+   -- The MG995 servo motor needs a 50 Hz frequency or 20 ms (already done above)
+	-- The spec says a valid duty cycle is 0.5 ms/20ms = 2.5% (-90 degree) 
+	--                                     1.5 ms/20ms = 7.5% ( 0 degree) 
+	--                                     2.5 ms/20ms = 12.5% ( +90 degree) 
 	  
-       -- for Value in MicroBit.IOsForTaskingTimer1.Analog_Value range 1 .. 1000 loop
-    --  Put("Value: ");
-    --      Put_Line(Integer'Image(Integer(Value)));
-    --  
-    --       --  Write the analog value to pin 0
-    --       Write (1, Value);
-    --  
-    --       --  Wait 20 milliseconds
-    --       delay until Clock + Milliseconds(20);
-      -- MicroBit.IOsForTasking.set(0, true);
-       --delay 0.00001;
-      --MicroBit.IOsForTasking.set(0, false);
-       --delay 0.00001;
+   -- Loop for value between 25 = 2.5% of 1023 (3.3V) and 127 = 12.5% of 1023.
+      for Angle in Analog_Value range 25.. 127 loop
+         --Set new duty cycle
+         Write (0, Angle);
+     
+         --Wait 2 frames of 50Hz = 40ms (delay is always needed because a servo needs time to physically rotate. Delay depends on amount of rotation and rotation speed of servo) 
+         --we also set the period to be 20ms, so faster than 20ms makes no sense.
+         Put_Line("Angle: " & Analog_Value'Image(Angle));
+         delay(0.04);
+      end loop;
       
-         --MicroBit.IOsForTaskingTimer1.Write (0, 512);
-         --end loop;
-      --  MicroBit.IOsForTasking.Write (1, 100);
-      --  MicroBit.IOsForTasking.Write (2, 100);
-      --  MicroBit.IOsForTaskingTimer1.Write (3, 100);
-      --  delay 0.25;
---  delay 0.25;
---  
---  MicroBit.IOsForTasking.Write (2, 100);
---  delay 0.25;
---  
---  MicroBit.IOsForTasking.Write (0, 30);
---  MicroBit.IOsForTasking.Write (1, 30);
---  delay 0.25;
---  
---  MicroBit.IOsForTasking.Write (2, 30);
---  delay 0.25;
---  
---  MicroBit.IOsForTaskingTimer1.Write (3, 100);
---  --      Write (4, 100);
---  delay 0.25;
---  
---  --  Write (10, 100);
---  --  Delay_Ms(250);
---  
---  MicroBit.IOsForTaskingTimer1.Write (3, 30);
- --     Write (4, 30);
---delay 0.25;
-
---  Write (10, 30);
---  Delay_Ms(250);
-
-   
    end loop;
 end Main;

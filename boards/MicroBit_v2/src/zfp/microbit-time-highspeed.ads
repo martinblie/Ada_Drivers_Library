@@ -32,6 +32,10 @@
 package MicroBit.Time.Highspeed is
    subtype Time_Us is UInt64;
 
-   procedure Delay_Us (Microseconds : UInt64);
-
-end MicroBit.Time.Highspeed;
+   procedure Delay_Us (Microseconds : UInt64); -- warning: this hacky implementation is not really a clock.
+                                               -- after starting the external high frequency crystal
+                                               -- NOP assembly instructions were added until oscilloscope showed reasonable alignment
+                                               -- the best range is between 2us and 1000us (1ms). For higher duration timing use the standard ada.real_time facilities
+                                               -- this function is a blocking function, consumes a lot of power and is very sensitive to
+                                               -- interrupts, which will completely destroy timing. In short, use with extreme care.
+end MicroBit.Time.Highspeed;                    -- a better implementation would use the 64MHz SysTick and count 64 pulses for 1 us.

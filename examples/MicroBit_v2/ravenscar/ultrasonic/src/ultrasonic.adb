@@ -1,5 +1,5 @@
-with MicroBit.Time.Highspeed; use MicroBit.Time.Highspeed;
-with MicroBit.IOs; use MicroBit.IOs;
+with MicroBit.TimeHighspeed; use MicroBit.TimeHighspeed;
+with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 with NRF_SVD.GPIO; use NRF_SVD.GPIO;
 use MicroBit;
 with HAL; use HAL;
@@ -10,7 +10,7 @@ package body Ultrasonic is
    result : Distance_cm := 0;
 
    procedure Setup (trigger_pin : Pin_Id; echo_pin : Pin_Id) is
-     dummy : Boolean; -- we dont use this variable for anything, but need it to setup the input (bad API)
+      dummy : Boolean; -- we dont use this variable for anything, but need it to setup the input (bad API)
    begin
       Set(trigger_pin, False); --set to output
       dummy := Set(echo_pin); --set to input
@@ -39,7 +39,7 @@ package body Ultrasonic is
                       -- and using GPIO_Periph.OUT_k.Arr (1) := high or low (use With NRF_SVD.GPIO; use NRF_SVD.GPIO;)
                       -- 2 us pulses can be reached if Delay is set to 1. These are blocking calls and implemented using assembly NOP instructions so not precise
                       -- A 64MHz clock (systick) signal would be more accurate to use and count 64 pulses for 1 us.
-                      -- There will always be a slight delay when toggling a pin. Toggling in hardware using use PPI and TE has the least delay.
+                      -- There will always be a slight delay when toggling a pin. Toggling in hardware using use PPI and TE (eg. automatically reacting to rising/falling edge has the least delay.
       GPIO_Periph.OUT_k.Arr (trigger_pin_device) := low;
       end SendTriggerPulse;
 

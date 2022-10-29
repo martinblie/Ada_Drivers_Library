@@ -42,9 +42,6 @@ begin
      -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value)
      Set (pin1, True);
 
-     --  Wait 1000 milliseconds
-     MicroBit.Time.Delay_Ms (1000);
-
    loop
       -- Toggle between True and False, making pin1 high and low
       pinIsActive := not pinIsActive;

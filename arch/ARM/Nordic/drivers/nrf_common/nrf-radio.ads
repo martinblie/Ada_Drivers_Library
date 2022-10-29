@@ -207,7 +207,7 @@ package nRF.Radio is
 
   function Get_QueueDepth return UInt8;
 
-  procedure DeepCopyIntoSafeFramebuffer (queueIndex : UInt8);
+  procedure DeepCopyIntoSafeFramebuffer;
 
   function Get_RSSIsample return  UInt7;
 

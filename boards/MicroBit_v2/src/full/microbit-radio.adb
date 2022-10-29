@@ -207,7 +207,7 @@ package body MicroBit.Radio is
             RxBuf.RSSI := Get_RSSI;
 
             --Copy in a shared object
-            DeepCopyIntoSafeFramebuffer(Get_QueueDepth);
+            DeepCopyIntoSafeFramebuffer;
 
             -- Increase our received packet count
             Set_QueueDepth(Get_QueueDepth +1);

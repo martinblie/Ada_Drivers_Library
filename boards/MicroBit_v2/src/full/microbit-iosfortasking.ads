@@ -31,14 +31,12 @@ package MicroBit.IOsForTasking is
    --  Set the period (in microseconds) of the PWM signal for all analog output
    --  pins.
 
-   procedure Write (Pin : Pin_Id; Value : Analog_Value)
-     with Pre => Supports (Pin, Analog);
+   procedure Write (Pin : Pin_Id; Value : Analog_Value);
 
    function Analog (Pin : Pin_Id) return Analog_Value
      with Pre => Supports (Pin, Analog);
    --  Read the voltagle applied to the pin. 0 means 0V 1023 means 3.3V
 
-   private
 
 --Mapping between pin id and GPIO_Points
 
@@ -82,7 +80,7 @@ Points : array (Pin_Id) of GPIO_Point :=
 
 
 protected Timer0 is
-   pragma Interrupt_Priority (System.Interrupt_Priority'First);
+   pragma Interrupt_Priority (System.Interrupt_Priority'First); -- highest priority (after RTC from ADA.Realtime)
    procedure Init_PWM_Timer;
    procedure PWM_Timer_Handler;
    pragma Attach_Handler (PWM_Timer_Handler, Ada.Interrupts.Names.TIMER0_Interrupt);

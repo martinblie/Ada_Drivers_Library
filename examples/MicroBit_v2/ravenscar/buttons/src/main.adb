@@ -28,78 +28,31 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with Ada.Text_IO; use Ada.Text_IO;
+with MicroBit.Console; use MicroBit.Console;
 with MicroBit.DisplayRT;
 with MicroBit.DisplayRT.Symbols;
 with MicroBit.Buttons; use MicroBit.Buttons;
-with ada.Real_Time; use ada.Real_Time;
-with LSM303AGR; use LSM303AGR;
-with MicroBit.Accelerometer;
---with MicroBit.Magnetometer;
 use MicroBit;
 
 procedure Main is
-AccData: All_Axes_Data;
-MagData: All_Axes_Data;
-   --this demo shows howto use the 2 buttons and the touch logo. Note that the logo is a little sensitive/erratic, sometimes touching back side for ground seems to be needed.
 begin
    loop
-      --  Read the accelerometer data
-      AccData := Accelerometer.AccelData;
-      MagData := Accelerometer.MagData;
-
-      --  Print the data on the serial port
-      Put_Line ("ACC" & ";" &
-                "X,"  & AccData.X'Img & ";" &
-                "Y,"  & AccData.Y'Img & ";" &
-                "Z,"  & AccData.Z'Img & ";");
-
-       Put_Line ("MAG" & ";" &
-                "X,"  & MagData.X'Img & ";" &
-                "Y,"  & MagData.Y'Img & ";" &
-                "Z,"  & MagData.Z'Img & ";");
-
-      MicroBit.DisplayRT.Clear;
-
-      if (MicroBit.Buttons.State (Button_A) = Pressed) and (MicroBit.Buttons.State (Button_B) = Pressed) then
-         Microbit.DisplayRT.Symbols.Smile;
-         Put_Line (MicroBit.DisplayRT.ConvertMatrixToMessage);
-
-         Put_Line ("BTN" & ";" &
-                   "A,"  & "pressed" & ";" &
-                   "B,"  & "pressed" & ";");
-
-      --we dont include the scenario where logo is pressed and one of the buttons
-
-      elsif MicroBit.Buttons.State (Button_A) = Pressed then
+      -- this example has 3 buttons that are all software debounced, meaning that when a press event is detected a timer is set to ignore interrupts of more btn press events.
+      if MicroBit.Buttons.State (Button_A) = Pressed then
          MicroBit.DisplayRT.Display ('A');
-         Put_Line (MicroBit.DisplayRT.ConvertMatrixToMessage);
-
-         Put_Line ("BTN" & ";" &
-                   "A,"  & "pressed" & ";");
-
+         Put_Line ("Pressed A");
       elsif MicroBit.Buttons.State (Button_B) = Pressed then
          MicroBit.DisplayRT.Display ('B');
-         Put_Line (MicroBit.DisplayRT.ConvertMatrixToMessage);
+         Put_Line ("Pressed B");
 
-         Put_Line ("BTN" & ";" &
-                   "B,"  & "pressed" & ";");
-
+      -- note that the touch logo is a bit finicky, it is not a clean signal as with the buttons.
       elsif MicroBit.Buttons.State (Logo) = Pressed then
-         Microbit.DisplayRT.Symbols.Heart;
-         Put_Line (MicroBit.DisplayRT.ConvertMatrixToMessage);
-
-         Put_Line ("BTN" & ";" &
-                   "L,"  & "pressed" & ";");
-
+         -- note that you can easily make new symbols by extending the symbol library above
+         DisplayRT.Symbols.Heart;
+         Put_Line ("Pressed L");
       else
+      -- we need to clear all pixels, else pixels overlap because they are not erase in the next loop.
          MicroBit.DisplayRT.Clear;
-         Put_Line ("BTN" & ";" &
-                   "A,"  & "released" & ";" &
-                   "B,"  & "released" & ";" &
-                   "L,"  & "released" & ";");
       end if;
-
-       delay until Clock + Milliseconds(500); --50ms debounce time / sensitivity
-       end loop;
+   end loop;
 end Main;

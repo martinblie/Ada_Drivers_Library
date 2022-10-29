@@ -267,7 +267,7 @@ package body nRF.Radio is
       QueueDepth := newDepth;
 end Set_QueueDepth;
 
-  procedure DeepCopyIntoSafeFramebuffer (queueIndex : UInt8) is
+  procedure DeepCopyIntoSafeFramebuffer is
    begin
       SafeFramebuffer.Length := RxBuf.Length;
       SafeFramebuffer.Version := RxBuf.Version;

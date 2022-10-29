@@ -36,8 +36,15 @@ procedure Main is
    Forward : constant Boolean := True; -- forward is true, backward is false
    
 begin
+   --  This example requires you to wire 2 motor controllers such as the LN298 to 4 DC motors.
+   --  The motorcontrollers can be powered by a 6V battery while the IO signals from the MB are 3.3V
+   --  Wire the Microbit v2 pins to the pin assignments below, eg motorcontroller1 IN1 is pin 6, motorcontroller2 IN1 is 12
+  
    --  We set the frequency by setting the period (remember f=1/t).
-   MicroBit.IOs.Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
+   --  By setting up the period, we can now use analog Write to set the dutycycle of the Enable pins of the motorcontroller
+   --  This allows to control the speed with 0% being off and 100% dutycycle (value 1023) being the fastest speed. 
+   
+   Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
    
    --LEFT
    --front   

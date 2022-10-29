@@ -35,8 +35,10 @@ with MicroBit.Buttons; use MicroBit.Buttons;
 with MicroBit.Time;    use MicroBit.Time;
 
 procedure Main is
+   -- this example requires you to wire two 2 servo motors to pin Microbit 1 and 2. It is recommended to power the servos's with 5V (check the spec sheet)
+   -- while the IO signal from the microbit s 3.3V
 
-   -- define the micro:bit v2 pins where 2 servo's are attached. In Microbit-servos it is checked if these are analog pins!
+   -- define the micro:bit v2 pins where 2 servo's are attached.
    subtype Servo_Pin_Id is Pin_Id range 1 .. 2;
 
    -- create a Servo_Pin_Array struct with embedded function Active to set the target angle of rotation

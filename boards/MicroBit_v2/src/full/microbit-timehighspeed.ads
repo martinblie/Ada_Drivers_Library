@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 --                                                                          --
---                       Copyright (C) 2018, AdaCore                        --
+--                       Copyright (C) 2016, AdaCore                        --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
 --  modification, are permitted provided that the following conditions are  --
@@ -28,32 +28,14 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Console;
-with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
-use MicroBit;
+with HAL; use HAL;
+package MicroBit.TimeHighspeed is
+   subtype Time_Us is UInt64;
 
-procedure Main is
-   isSignalHigh : Boolean;
-begin
-   -- check once if micro:bit v2 pin 0 is high or low.
-   -- The API is horrible. Set(pin) for reading and Set(pin,value) for writing
-   -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value) and AnalogWrite (pin, value)
-   isSignalHigh := Set (0);
-
-   -- write to serial monitor
-   Console.Put(Boolean'Image(isSignalHigh));
-
- loop
-     --  continuous check if micro:bit v2 pin 1 is high or low
-      if Set (0) then
-         --write to serial monitor
-         Console.Put("H ");
-      else
-         --write to serial monitor
-         Console.Put("L ");
-      end if;
-
-      -- delay for 100ms and read pin again
-      delay(0.1);
-   end loop;
-end Main;
+   procedure Delay_Us (Microseconds : UInt64); -- warning: this hacky implementation is not really a clock.
+                                               -- after starting the external high frequency crystal
+                                               -- NOP assembly instructions were added until oscilloscope showed reasonable alignment
+                                               -- the best range is between 2us and 1000us (1ms). For higher duration timing use the standard ada.real_time facilities
+                                               -- this function is a blocking function, consumes a lot of power and is very sensitive to
+                                               -- interrupts, which will completely destroy timing. In short, use with extreme care.
+end MicroBit.TimeHighspeed;                    -- a better implementation would use the 64MHz SysTick and count 64 pulses for 1 us.
