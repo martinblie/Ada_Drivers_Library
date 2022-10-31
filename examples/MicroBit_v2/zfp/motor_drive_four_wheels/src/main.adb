@@ -28,7 +28,7 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.IOs;
+with MicroBit.IOs; use Microbit.IOs;
 with MicroBit;
 
 procedure Main is
