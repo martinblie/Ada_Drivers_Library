@@ -79,11 +79,11 @@ Points : array (Pin_Id) of GPIO_Point :=
   );
 
 
-protected Timer0 is
+protected Timer3 is
    pragma Interrupt_Priority (System.Interrupt_Priority'First); -- highest priority (after RTC from ADA.Realtime)
    procedure Init_PWM_Timer;
    procedure PWM_Timer_Handler;
-   pragma Attach_Handler (PWM_Timer_Handler, Ada.Interrupts.Names.TIMER0_Interrupt);
-end Timer0;
+   pragma Attach_Handler (PWM_Timer_Handler, Ada.Interrupts.Names.TIMER3_Interrupt);
+end Timer3;
 
 end MicroBit.IOsForTasking;

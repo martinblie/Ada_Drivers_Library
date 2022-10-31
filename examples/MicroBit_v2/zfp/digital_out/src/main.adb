@@ -28,7 +28,7 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
+with MicroBit.Console; use MicroBit.Console;
 with MicroBit.IOs; use MicroBit.IOs;
 with MicroBit.Time;
 
@@ -48,6 +48,9 @@ begin
 
       --Write to pin1
       Set (pin1, pinIsActive);
+
+      --Show on serial port
+      Put_Line("Pin1 is: " & pinIsActive'Image);
 
       --  Wait 500 milliseconds
       MicroBit.Time.Delay_Ms (500);

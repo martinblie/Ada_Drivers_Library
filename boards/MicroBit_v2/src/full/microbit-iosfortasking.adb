@@ -368,7 +368,7 @@ package body MicroBit.IOsForTasking is
 
          Current_Mode (Pin) := Analog_Out;
 
-         Timer0.Init_PWM_Timer;
+         Timer3.Init_PWM_Timer;
 
          PWM_Timer.Start;
       end if;
@@ -418,7 +418,7 @@ if Value = 0 then
       return Analog_Value (Result);
    end Analog;
 
-   protected body Timer0 is
+   protected body Timer3 is
 
    -----------------------
    -- PWM_Timer_Handler --
@@ -472,7 +472,7 @@ if Value = 0 then
       nRF.Interrupts.Enable (PWM_Interrupt);
    end Init_PWM_Timer;
 
-   end Timer0;
+   end Timer3;
 
 
 end MicroBit.IOsForTasking;

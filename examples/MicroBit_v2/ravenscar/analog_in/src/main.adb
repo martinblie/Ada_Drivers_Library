@@ -28,7 +28,7 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.Console;
+with Ada.Text_IO; use Ada.Text_IO;
 with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
 use MicroBit;
 
@@ -41,7 +41,7 @@ begin
      Value := Analog (1);
 
      -- Put read value onto serial monitor
-     Console.Put(Integer'Image(Integer(Value)));
+     Put_Line(Value'Image);
 
      -- Wait 100 ms for next read
 	  delay (0.1);

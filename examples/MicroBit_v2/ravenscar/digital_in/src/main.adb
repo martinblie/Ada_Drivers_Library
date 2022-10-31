@@ -38,14 +38,14 @@ begin
    -- check once if micro:bit v2 pin 0 is high or low.
    -- The API is horrible. Set(pin) for reading and Set(pin,value) for writing
    -- We should improve this API to DigitalRead(pin), AnalogRead (pin) and DigitalWrite (pin, value) and AnalogWrite (pin, value)
-   isSignalHigh := Set (0);
+   isSignalHigh := Set (5); -- Pin 5 is Button A, press it to see a change.
 
    -- write to serial monitor
-   Console.Put(Boolean'Image(isSignalHigh));
+   Console.Put(isSignalHigh'Image);
 
  loop
      --  continuous check if micro:bit v2 pin 1 is high or low
-      if Set (0) then
+      if Set (5) then
          --write to serial monitor
          Console.Put("H ");
       else

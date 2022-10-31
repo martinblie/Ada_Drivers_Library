@@ -66,7 +66,7 @@ begin
      
          --Wait 2 frames of 50Hz = 40ms (delay is always needed because a servo needs time to physically rotate. Delay depends on amount of rotation and rotation speed of servo) 
          --we also set the period to be 20ms, so faster than 20ms makes no sense.
-         Put_Line("Angle: " & Analog_Value'Image(Angle));
+         Put_Line("Angle: " & Angle'Image);
          delay(0.04);
       end loop;
       

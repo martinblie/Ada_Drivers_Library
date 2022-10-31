@@ -28,24 +28,25 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.IOs;
+with MicroBit.Console; use MicroBit.Console;
+with MicroBit.IOs; use MicroBit.IOs;
 with MicroBit.Time; use MicroBit.Time;
 with MicroBit;
 
 procedure Main is
    -- a range between 0 and 1023 meaning 0V to 3.3V
-   Value : constant MicroBit.IOs.Analog_Value := 76;
+   Value : constant Analog_Value := 76;
 begin
    -- To create an analog output signal we need frequency and amplitude
    
    --  We set the frequency by setting the period (remember f=1/t).
-   MicroBit.IOs.Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
+   Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
    
    --  To set the amplitude we use a trick called duty cycle. For example:
    --  A 100% duty cycle means a DC signal (always up), eg the frequency is 0, despite being set.
    --  A 50% duty cycle means on average 1.65V but it also means 50% the pulse is up at 3.3V and 50% the pulse is down at 0V.
    --  A 10% duty cycle means 10% of 3.3V = on average 0.33V: 10% up, 90% down.
-   MicroBit.IOs.Write (0, Value);
+   Write (0, Value);
    
    --  Wait 5 seconds
    Delay_Ms(5000);
@@ -60,10 +61,13 @@ begin
 	--                                     2.5 ms/20ms = 12.5% ( +90 degree) 
 	  
    -- Loop for value between 25 = 2.5% of 1023 (3.3V) and 127 = 12.5% of 1023.
-      for Angle in MicroBit.IOs.Analog_Value range 25.. 127 loop
+      for Angle in Analog_Value range 25.. 127 loop
          --Set new duty cycle
-         MicroBit.IOs.Write (0, Angle);
+         Write (0, Angle);
      
+         --Write result to Serial port
+         Put_Line("Angle is: " & Angle'Image);
+         
          --Wait 2 frames of 50Hz = 40ms (delay is always needed because a servo needs time to physically rotate. Delay depends on amount of rotation and rotation speed of servo) 
          Delay_Ms(40);
       end loop;
