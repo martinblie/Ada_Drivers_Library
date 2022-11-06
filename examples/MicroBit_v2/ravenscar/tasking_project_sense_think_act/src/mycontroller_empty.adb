@@ -1,6 +1,6 @@
 with Ada.Real_Time; use Ada.Real_Time;
 with MicroBit.Console; use MicroBit.Console;
-package body mycontroller_empty is
+package body MyController_empty is
 
    task body sense is
       myClock : Time;
@@ -8,11 +8,11 @@ package body mycontroller_empty is
       loop
          myClock := Clock;
          
-         delay (0.05); --simulate 50 ms execution time
+         delay (0.05); --simulate 50 ms execution time, replace with your code
          
          MotorDriver.SetDirection (Stop);
          
-         delay until myClock + Milliseconds(200);
+         delay until myClock + Milliseconds(100);
       end loop;
    end sense;
 
@@ -22,7 +22,7 @@ package body mycontroller_empty is
       loop
          myClock := Clock;
          
-         delay (0.05); --simulate 50 ms execution time
+         delay (0.05); --simulate 50 ms execution time, replace with your code
          
          MotorDriver.SetDirection (Forward);
          
@@ -38,7 +38,7 @@ package body mycontroller_empty is
        
          Put_Line ("Direction is: " & Directions'Image (MotorDriver.GetDirection));
          
-         delay until myClock + Milliseconds(50);
+         delay until myClock + Milliseconds(40);
       end loop;
    end act;
    
@@ -55,4 +55,4 @@ package body mycontroller_empty is
          return DriveDirection;
       end GetDirection;
     end MotorDriver;
-end mycontroller_empty;
+end MyController_empty;

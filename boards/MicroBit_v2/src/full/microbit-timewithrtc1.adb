@@ -4,18 +4,22 @@ with nRF.Device;        use nRF.Device;
 with nRF.RTC;           use nRF.RTC;
 with nRF.Events;
 with nRF.Interrupts;
-with Machine_Code; use Machine_Code;
+with Ada.Real_Time; use Ada.Real_Time;
+
 package body MicroBit.TimeWithRTC1 is
  package Clocks renames nRF.Clock;
 
-   procedure Delay_Ms (Milliseconds : UInt64) is
-      Wakeup_Time : constant UInt64 := Timer.Get_Clock + Milliseconds;
+   procedure Delay_Ms (Ms : Integer) is
+      --Wakeup_Time : constant UInt64 := Timer.Get_Clock + Milliseconds;
    begin
-      while Wakeup_Time > Timer.Get_Clock loop
-         Asm (Template => "wfi", -- Wait for interrupt, note that this is a blocking call as the CPU will halt all execution
-                                 -- Using WFI saves power: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Wait-For-Interrupt?lang=en
-              Volatile => True);
-      end loop;
+      -- NOTE THAT WE ARE NOW NOT USING RTC1, BUT RTC0.
+      delay until Clock + Milliseconds(Ms);
+
+      --while Wakeup_Time > Timer.Get_Clock loop
+         --Asm (Template => "wfi", -- Wait for interrupt, note that this is a blocking call as the CPU will halt all execution
+         --                        -- Using WFI saves power: https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Wait-For-Interrupt?lang=en
+         --     Volatile => True);
+      --end loop;
    end Delay_Ms;
 
    --  ---------------

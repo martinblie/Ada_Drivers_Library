@@ -28,7 +28,7 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
+with Ada.Real_Time; use Ada.Real_Time;
 package body MicroBit.Music is
 
    ----------
@@ -61,7 +61,7 @@ package body MicroBit.Music is
    procedure Play (Pin : Pin_Id; N : Note) is
    begin
       Play (Pin, N.P);
-      MicroBit.TimeWithRTC1.Delay_Ms (N.Ms);
+      delay until Clock + Milliseconds(N.Ms);
    end Play;
 
    ----------
@@ -73,6 +73,8 @@ package body MicroBit.Music is
       for N of M loop
          Play (Pin, N);
       end loop;
+
+      Set (Pin, False); --stop
    end Play;
 
 end MicroBit.Music;

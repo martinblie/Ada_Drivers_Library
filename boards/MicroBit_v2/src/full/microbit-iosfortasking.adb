@@ -38,6 +38,9 @@ with nRF.Timers;                use nRF.Timers;
 with nRF.GPIO.Tasks_And_Events; use nRF.GPIO.Tasks_And_Events;
 with nRF.Events;                use nRF.Events;
 with nRF.Interrupts;            use nRF.Interrupts;
+with NRF_SVD.NVMC; use NRF_SVD.NVMC;
+with NRF_SVD.UICR; use NRF_SVD.UICR;
+with Cortex_M.NVIC; use Cortex_M.NVIC;
 
 package body MicroBit.IOsForTasking is
    --  SB: Implementation constraints:
@@ -418,6 +421,32 @@ if Value = 0 then
       return Analog_Value (Result);
    end Analog;
 
+   procedure Setup_Pins is
+   begin
+      if Disable_NFC_Pins then
+         --based on : https://github.com/lancaster-university/codal-microbit-v2/blob/button-demand-activation/model/MicroBit.cpp
+         if UICR_Periph.NFCPINS.PROTECT = Nfc then
+
+            NVMC_Periph.CONFIG.WEN := Wen;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            UICR_Periph.NFCPINS.PROTECT := Disabled;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            NVMC_Periph.CONFIG.WEN := Ren;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            Reset_System;
+         end if;
+      end if;
+   end Setup_Pins;
+   
    protected body Timer3 is
 
    -----------------------
@@ -474,5 +503,7 @@ if Value = 0 then
 
    end Timer3;
 
-
+begin
+   -- Initialize pins once
+   Setup_Pins;
 end MicroBit.IOsForTasking;

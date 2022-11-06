@@ -33,6 +33,8 @@ with LSM303AGR;
 
 package MicroBit.Accelerometer is
 
+   function AccelDataRaw return LSM303AGR.All_Axes_Data_Raw;
+
    function AccelData return LSM303AGR.All_Axes_Data;
    --  Return the acceleration value for each of the three axes (X, Y, Z)
 

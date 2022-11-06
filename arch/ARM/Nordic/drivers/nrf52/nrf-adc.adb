@@ -78,6 +78,7 @@ package body nRF.ADC is
       Res   : Bits_Resolution) return UInt16
    is
       Result : UInt16 with Volatile;
+      Upper_Limit: UInt16;
    begin
       Set_Resolution (Res);
       Set_Reference (Ref);
@@ -130,7 +131,16 @@ package body nRF.ADC is
 
       --Sometimes results are illegal (value 65535, all 1's, which in 16 bit 2's complement is unattainable for a max 14 bit ADC)
       --This is a hardware fault caused by ground bounce, see https://github.com/apache/mynewt-core/issues/2338
-      if Result = 65535 then
+      --Since we are not using negative voltages we are expecting a result between 0 and 1023 (10 bit)
+      --This needs to be changed when higher resolution ADC is used!
+
+      case Res is
+         when Res_8bit  => Upper_Limit := 255;
+         when Res_10bit => Upper_Limit := 1023;
+         when Res_12bit => Upper_Limit := 4095;
+      end case;
+
+      if Result > Upper_Limit then
          Result := 0;
       end if;
 

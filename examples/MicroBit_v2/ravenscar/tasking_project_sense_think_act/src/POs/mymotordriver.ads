@@ -5,38 +5,31 @@ package MyMotorDriver is
 
    type Directions is (Forward, Stop); --only two are implemented but many configuration are possible with mecanum wheels
    
-   type DriveInstruction is record
-           LeftFrontSpeed: Analog_Value;
-           LeftFrontPin1 : Boolean;
-           LeftFrontPin2 : Boolean;
-           LeftBackSpeed : Analog_Value;
-           LeftBackPin1 : Boolean;
-           LeftBackPin2 : Boolean;
-      
-           RightFrontSpeed : Analog_Value;
-           RightFrontPin1 : Boolean;
-           RightFrontPin2 : Boolean;
-           RightBackSpeed : Analog_Value;
-           RightBackPin1 : Boolean;
-           RightBackPin2 : Boolean;
+   type MotorControllerPins is record
+           LF_ENB  : Pin_Id;
+           LF_IN3 : Pin_Id;
+           LF_IN4 : Pin_Id;
+           LB_ENA : Pin_Id;
+           LB_IN1 : Pin_Id;
+           LB_IN2 : Pin_Id;
+                          
+           RF_ENA : Pin_Id;
+           RF_IN1 : Pin_Id;
+           RF_IN2 : Pin_Id;
+           RB_ENB : Pin_Id;
+           RB_IN3 : Pin_Id;
+           RB_IN4 : Pin_Id;
+   end record;
+
+   type Wheel is record
+      PinForward : Pin_Id;
+      PinBackward : Pin_Id;
+      PinSpeed : Pin_Id;  
+      PinForwardValue: Boolean;
+      PinBackwardValue: Boolean;
+      PinSpeedValue: Analog_Value;
    end record;
    
-   type MotorControllerPins is record
-           LeftFrontSpeedEnA : Pin_Id;
-           LeftFrontPin1In1 : Pin_Id;
-           LeftFrontPin2In2 : Pin_Id;
-           LeftBackSpeedEnB : Pin_Id;
-           LeftBackPin1In3 : Pin_Id;
-           LeftBackPin2In4 : Pin_Id;
-                          
-           RightFrontSpeedEnA : Pin_Id;
-           RightFrontPin1In1 : Pin_Id;
-           RightFrontPin2In2 : Pin_Id;
-           RightBackSpeedEnB : Pin_Id;
-           RightBackPin1In3 : Pin_Id;
-           RightBackPin2In4 : Pin_Id;
-   end record;
-       
    protected MotorDriver is
       -- see https://learn.adacore.com/courses/Ada_For_The_Embedded_C_Developer/chapters/03_Concurrency.html#protected-objects
       function GetDirection return Directions; -- concurrent read operations are now possible

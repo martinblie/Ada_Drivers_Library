@@ -45,10 +45,20 @@ package LSM303AGR is
      (PowerDown, Freq_1, Freq_10, Freq_25, Freq_50, Freq_100, Freq_200,
       Freq_400, Low_Power, Hi_Res_1k6_Low_power_5k3);
 
-   type Axis_Data is range -2**9 .. 2**9 - 1 with Size => 10;
+   type Axis_Data is range -2**9 .. 2**9 - 1 with Size => 10; -- we decimate from 16 (the output of the accel device) to 10 bits? Why?
+                                                              -- Does this mean that the actual range is -512 .. 511?
+
+   type Axis_Data_Raw is record
+      Low : UInt8;
+      High : UInt8;
+   end record;
 
    type All_Axes_Data is record
       X, Y, Z : Axis_Data;
+   end record;
+
+      type All_Axes_Data_Raw is record
+      X, Y, Z : Axis_Data_Raw;
    end record;
 
    type LSM303AGR_Accelerometer (Port : not null Any_I2C_Port) is
@@ -65,8 +75,14 @@ package LSM303AGR is
    function Read_Accelerometer
      (This : LSM303AGR_Accelerometer) return All_Axes_Data;
 
+   function Read_Accelerometer_Raw
+     (This : LSM303AGR_Accelerometer) return All_Axes_Data_Raw;
+
+
    function Read_Magnetometer
      (This : LSM303AGR_Accelerometer) return All_Axes_Data;
+
+   function Convert (Low, High : UInt8) return Axis_Data;
 
 
 private

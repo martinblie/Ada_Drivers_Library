@@ -1,8 +1,9 @@
-with MyController; -- This embeds and instantiates the MyController package
+--with MyController; -- This embeds and instantiates the MyController package
+with MyController_empty;
 
 -- NOTE ----------
--- See the mycontroller_empty package first for a single file empty Sense-Think-Act (STA) template
--- The mycontroller package contains a better structured STA template with each task having its own file
+-- See the MyController_empty package first for a single file empty Sense-Think-Act (STA) template
+-- The MyController package contains a better structured STA template with each task having its own file
 -- Build your own controller from scratch using the template and structured coding principles as a guide line.
 -- Use
 ------------------

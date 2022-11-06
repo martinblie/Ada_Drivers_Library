@@ -145,7 +145,7 @@ package NRF_SVD.UICR is
    --  Setting of pins dedicated to NFC functionality: NFC antenna or GPIO
    type NFCPINS_Register is record
       --  Setting of pins dedicated to NFC functionality
-      PROTECT       : NFCPINS_PROTECT_Field := NRF_SVD.UICR.Nfc;
+      PROTECT       : NFCPINS_PROTECT_Field := NRF_SVD.UICR.Disabled;
       --  unspecified
       Reserved_1_31 : HAL.UInt31 := 16#7FFFFFFF#;
    end record

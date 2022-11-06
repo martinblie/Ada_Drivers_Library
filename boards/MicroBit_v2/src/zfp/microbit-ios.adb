@@ -28,7 +28,6 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
 with HAL;                         use HAL;
 with nRF.ADC;                   use nRF.ADC;
 with nRF.Device;                use nRF.Device;
@@ -37,6 +36,9 @@ with nRF.Timers;                use nRF.Timers;
 with nRF.GPIO.Tasks_And_Events; use nRF.GPIO.Tasks_And_Events;
 with nRF.Events;                use nRF.Events;
 with nRF.Interrupts;            use nRF.Interrupts;
+with NRF_SVD.NVMC; use NRF_SVD.NVMC;
+with NRF_SVD.UICR; use NRF_SVD.UICR;
+with Cortex_M.NVIC; use Cortex_M.NVIC;
 
 package body MicroBit.IOs is
 
@@ -288,32 +290,27 @@ package body MicroBit.IOs is
       PWM_Timer.Set_Mode (Mode_Timer);
       PWM_Timer.Set_Prescaler (0); -- 6 is 250 KHz, 0 is 16 MHz
       PWM_Timer.Set_Bitmode (Bitmode_32bit);
-
       --  Clear counter internal register and stop when timer reaches compare
       --  value 3 or 5 depending on chosen timer.
       PWM_Timer.Compare_Shortcut (Chan  => PWM_Global_Compare,
                                   Stop  => True,
                                   Clear => True);
-
       PWM_Timer.Set_Compare (PWM_Global_Compare, PWM_Period);
-
-
 
       for Id in PWM_Id loop
          PWM_Timer.Set_Compare (Timer_Channel (Id),To_Compare_Value (PWMs (Id).Pulse_Width));
-
          if PWMs (Id).Taken then
             Configure_GPIOTE (Id);
          end if;
 
       end loop;
-
       Enable_Interrupt (PWM_Timer.Compare_Event (PWM_Global_Compare));
 
       nRF.Interrupts.Register (PWM_Interrupt,
                                  PWM_Timer_Handler'Access);
 
       nRF.Interrupts.Enable (PWM_Interrupt);
+
    end Init_PWM_Timer;
 
    ---------
@@ -406,30 +403,23 @@ package body MicroBit.IOs is
    begin
 
       if not Has_PWM (Pin) then
-
          --  Stop the timer while we configure a new pin
 
          PWM_Timer.Stop;
          PWM_Timer.Clear;
-
          Allocate_PWM (Pin, Success);
          if not Success then
             raise Program_Error with "No PWM available";
          end if;
-
          --  Set the pin as output
          Conf.Mode         := Mode_Out;
          Conf.Resistors    := No_Pull;
          Conf.Input_Buffer := Input_Buffer_Connect;
          Conf.Sense        := Sense_Disabled;
-
          Pt.Configure_IO (Conf);
          Pt.Clear;
-
          Current_Mode (Pin) := Analog_Out;
-
          Init_PWM_Timer;
-
          PWM_Timer.Start;
       end if;
 
@@ -477,4 +467,33 @@ package body MicroBit.IOs is
       return Analog_Value (Result);
    end Analog;
 
+   procedure Setup_Pins is
+   begin
+      if Disable_NFC_Pins then
+         --based on : https://github.com/lancaster-university/codal-microbit-v2/blob/button-demand-activation/model/MicroBit.cpp
+         if UICR_Periph.NFCPINS.PROTECT = Nfc then
+
+            NVMC_Periph.CONFIG.WEN := Wen;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            UICR_Periph.NFCPINS.PROTECT := Disabled;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            NVMC_Periph.CONFIG.WEN := Ren;
+            while NVMC_Periph.READY.READY = Busy loop
+               null;
+            end loop;
+
+            Reset_System;
+         end if;
+      end if;
+   end Setup_Pins;
+
+begin
+   -- Initialize pins once
+   Setup_Pins;
 end MicroBit.IOs;

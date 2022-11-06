@@ -34,7 +34,7 @@ with LSM303AGR; use LSM303AGR;
 with MicroBit.Display;
 with MicroBit.Display.Symbols;
 with MicroBit.Accelerometer;
-with MicroBit.Console;
+with MicroBit.Console; use MicroBit.Console;
 with MicroBit.Time;
 
 use MicroBit;
@@ -51,10 +51,11 @@ begin
       --  --  Read the accelerometer data
       Data := Accelerometer.Data;
 
-      --  Print the data on the serial port
-      Console.Put_Line ("X:" & Data.X'Img & ASCII.HT &
-                        "Y:" & Data.Y'Img & ASCII.HT &
-                        "Z:" & Data.Z'Img);
+      --  Print the ACC data on the serial port. Note the special format for the Unity simulator!
+      Put_Line ("ACC;" &
+                "X,"  & Data.X'Img & ";" &
+                "Y,"  & Data.Y'Img & ";" &
+                "Z,"  & Data.Z'Img);
 
       --  Clear the LED matrix
       Display.Clear;

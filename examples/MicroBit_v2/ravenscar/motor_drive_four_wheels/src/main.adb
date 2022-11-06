@@ -28,46 +28,74 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-with MicroBit.IOsForTasking; use MicroBit.IOsForTasking;
+with MicroBit.IOsForTasking;  use MicroBit.IOsForTasking;
 with MicroBit;
 
 procedure Main is
    Speed : constant Analog_Value := 512; --between 0 and 1023
-   Forward : constant Boolean := True; -- forward is true, backward is false
+   DriveForward       : Boolean := True; -- forward is true, backward is false
    
+   UseLeftFrontWheel  : Boolean := True;
+   UseLeftBackWheel   : Boolean := True;
+   UseRightFrontWheel : Boolean := True;
+   UseRightBackWheel  : Boolean := True;
+
 begin
    --  This example requires you to wire 2 motor controllers such as the LN298 to 4 DC motors.
-   --  The motorcontrollers can be powered by a 6V battery while the IO signals from the MB are 3.3V
-   --  Wire the Microbit v2 pins to the pin assignments below, eg motorcontroller1 IN1 is pin 6, motorcontroller2 IN1 is 12
-  
-   --  We set the frequency by setting the period (remember f=1/t).
+   --  The motor controllers can be powered by a 6V battery while the IO signals from the MB are 3.3V
+   --  Wire the Microbit v2 pins to the pin assignments below. Carefully note the labels IN1, IN2, IN3, IN4, ENA, ENB and the assigned pins
+   --  They differ from the left and right motor controller since they are physically mirrored on the car and now the wiring is easiest.
+
+   --  Test routine: First Enable the LeftFrontWheel and leave DriveForward to true;
+   --  Fix the wiring until the LeftFrontWheel drives forward.
+   --  Then Disable and Enable LeftBackWheel and fix the wiring until it drives forward.
+   --  Repeat for all wheels.
+   --  Enable all wheels to see that the care is now moving forward.   
+   --  Change Forward to False to and make sure it also drives backwards!
+   
+   --  Each wheel is controlled individually with PWM signals. 
+   --  We set the frequency by setting the period (remember f=1/t) using Set_Analog_Period_Us.
    --  By setting up the period, we can now use analog Write to set the dutycycle of the Enable pins of the motorcontroller
-   --  This allows to control the speed with 0% being off and 100% dutycycle (value 1023) being the fastest speed. 
-   
-   Set_Analog_Period_Us(20000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us 
-   
+   --  This allows to control the speed with 0% being off and 100% dutycycle (value 1023) being the fastest speed.
+   --  To stop we set either Write(0) or both Pins to False. Better is setting both Write(0) and Pins to False otherwise the motor controller can produce a high pitched noise.
+
+   --  There is a good chance all wheels spin at different speeds, despite all being set to 512.
+   --  Calibrate the speed using the Calibrate example.
+   Set_Analog_Period_Us (20_000); -- 50 Hz = 1/50 = 0.02s = 20 ms = 20000us
+
    --LEFT
-   --front   
-   Set(6, Forward); --IN1
-   Set(7, not Forward); --IN2
-   
-   --back
-   Set(2, Forward); --IN3
-   Set(3, not Forward); --IN4
-   
-   --RIGHT
    --front
-   Set(12, Forward); --IN1
-   Set(13, not Forward); --IN2
+   if UseLeftFrontWheel then
+      Set (11, DriveForward); --IN3
+      Set (12, not DriveForward); --IN4
+      Write (0, Speed); -- ENB
+   end if;
 
    --back
-   Set(14, Forward); --IN3
-   Set(15, not Forward); --IN4
-   
-   Write (0, Speed); --left speed control ENA ENB
-   Write (1, Speed); --right speed control ENA ENB
+   if UseLeftBackWheel then
+      Set (13, DriveForward); --IN1
+      Set (14, not DriveForward); --IN2
+      Write (1, Speed); -- ENA
+   end if;
+
+   --RIGHT
+   --front
+   if UseRightFrontWheel then
+      Set (15, DriveForward); --IN1
+      Set (16, not DriveForward); --IN2
+      Write (2, Speed); -- ENA
+   end if;
+
+   --back
+   if UseRightBackWheel then
+      Set (19, DriveForward); --IN3
+      Set (20, not DriveForward); --IN4
+      Write (3, Speed); -- ENB
+   end if;
    
    loop
-     null;
+      null; -- note that setting the period with Set_Analog_Period_Us
+            -- and setting the dutycycle with Write allows the motors 
+            -- to drive continuously
    end loop;
 end Main;

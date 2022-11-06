@@ -37,6 +37,10 @@ package MicroBit.IOsForTasking is
      with Pre => Supports (Pin, Analog);
    --  Read the voltagle applied to the pin. 0 means 0V 1023 means 3.3V
 
+   procedure Setup_Pins;
+
+   -- Disable NFC pins which are on by default as GPIO MB pins 8 and 9
+   Disable_NFC_Pins : Boolean := True;
 
 --Mapping between pin id and GPIO_Points
 
