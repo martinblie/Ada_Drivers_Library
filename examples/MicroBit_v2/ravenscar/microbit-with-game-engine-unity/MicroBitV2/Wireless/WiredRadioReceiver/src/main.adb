@@ -31,6 +31,8 @@
 
 with MicroBit.DisplayRT;
 with MicroBit.DisplayRT.Symbols;
+with MicroBit.DisplayRT;
+with MicroBit.DisplayRT.Symbols;
 with MicroBit.Console; use MicroBit.Console;
 with MicroBit.Music; use MicroBit.Music;
 with MicroBit.Radio; use MicroBit.Radio;
@@ -52,7 +54,8 @@ procedure Main is
     (F4,   400));
 
    RXdata : Radio.RadioData;
-
+   X,Y,Z : Axis_Data;
+   Threshold : constant := 150;
 begin
    Put_Line (""); --send empty message since Ada runtime sends a zero symbol on the serial at bootup.
    --Send reset signal to unity
@@ -93,6 +96,31 @@ begin
             RXdata.Payload(10)'Image & ";" &
             RXdata.Payload(11)'Image & ";" &
             RXdata.Payload(12)'Image);
+
+            --copy LED output indicate it is RXing
+            X:= LSM303AGR.Convert(RXdata.Payload(1), RXdata.Payload(2)) * Axis_Data (-1);
+            Y:= LSM303AGR.Convert(RXdata.Payload(3), RXdata.Payload(4));
+            Z:= LSM303AGR.Convert(RXdata.Payload(5), RXdata.Payload(6));
+
+             --  Clear the LED matrix
+            MicroBit.DisplayRT.Clear;
+
+            if X > Threshold then
+               MicroBit.DisplayRT.Symbols.Left_Arrow;
+
+            elsif X < -Threshold then
+               MicroBit.DisplayRT.Symbols.Right_Arrow;
+
+            elsif Y > Threshold then
+               DisplayRT.Symbols.Up_Arrow;
+
+            elsif Y < -Threshold then
+               MicroBit.DisplayRT.Symbols.Down_Arrow;
+
+            else
+               MicroBit.DisplayRT.Symbols.Heart;
+            end if;
+
          end if;
          end loop;
 

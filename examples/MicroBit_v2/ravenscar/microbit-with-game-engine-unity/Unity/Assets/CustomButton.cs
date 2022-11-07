@@ -8,7 +8,9 @@ public class CustomButton : MonoBehaviour
     float startHeight;
     public float maxTravelDistance = 0.30f;
     float pressedHeight;
-    public bool isPressed;
+    public bool isPressed =false;
+    public bool isDown = false;
+    public bool isUp = false;
 
     private void Start()
     {

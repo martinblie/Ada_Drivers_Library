@@ -18,7 +18,7 @@ public class SerialController
             Thread.CurrentThread.IsBackground = true;
             try
             {
-                stream = new SerialPort("COM9", 115200, Parity.None, 8, StopBits.One);
+                stream = new SerialPort("COM4", 115200, Parity.None, 8, StopBits.One);
                 stream.Open();
                 string message;
                 string response;
@@ -47,7 +47,10 @@ public class SerialController
                             RX.Enqueue(response);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("[Exception] RX: {0}", ex);
+                    }
                 }
             }
             catch (Exception ex) {
