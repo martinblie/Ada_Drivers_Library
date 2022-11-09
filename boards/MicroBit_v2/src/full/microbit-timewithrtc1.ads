@@ -7,9 +7,9 @@ package MicroBit.TimeWithRTC1 is
    type Tick_Callback is access procedure;
    Subscribers : array (1 .. 10) of Tick_Callback := (others => null);
 
-   procedure Delay_Ms (Milliseconds : UInt64);
+   procedure Delay_Ms (Ms : Integer);
 
-   procedure Sleep (Milliseconds : UInt64) renames Delay_Ms;
+   procedure Sleep (Ms : Integer) renames Delay_Ms;
 
 --  function HAL_Delay return not null HAL.Time.Any_Delays;
 --

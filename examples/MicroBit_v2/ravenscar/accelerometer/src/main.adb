@@ -51,8 +51,8 @@ begin
       --  Read the accelerometer data
       Data := Accelerometer.AccelData;
 
-      --  Print the data on the serial port
-      Put_Line ("ACC" & ";" &
+      --  Print the ACC data on the serial port. Note the special format for the Unity simulator!
+      Put_Line ("ACC;" &
                 "X,"  & Data.X'Img & ";" &
                 "Y,"  & Data.Y'Img & ";" &
                 "Z,"  & Data.Z'Img);
@@ -77,8 +77,7 @@ begin
 
       else
          MicroBit.DisplayRT.Symbols.Heart;
-
-      end if;
+       end if;
 
       --  Do nothing for 250 milliseconds
        delay until Clock + Milliseconds(16);

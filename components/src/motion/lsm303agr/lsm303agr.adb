@@ -208,6 +208,30 @@ package body LSM303AGR is
       return AxisData;
    end Read_Accelerometer;
 
+   function Read_Accelerometer_Raw
+     (This : LSM303AGR_Accelerometer) return All_Axes_Data_Raw
+   is
+      Status   : I2C_Status;
+      Data     : I2C_Data (1 .. 6) := (others => 0);
+      AxisData : All_Axes_Data_Raw     := (X => (0,0), Y => (0,0), Z => (0,0));
+   begin
+      This.Port.Mem_Read
+        (Addr          => Accelerometer_Address,
+         Mem_Addr      => To_Multi_Byte_Read_Address (OUT_X_L_A),
+         Mem_Addr_Size => Memory_Size_8b, Data => Data, Status => Status);
+      Assert_Status (Status);
+
+       -- LSM303AGR has its X-axis in the opposite direction
+       -- of the MMA8653FCR1 sensor.
+      AxisData.X.Low := Data (1);
+      AxisData.X.High:= Data (2);
+      AxisData.Y.Low := Data (3);
+      AxisData.Y.High:= Data (4);
+      AxisData.Z.Low := Data (5);
+      AxisData.Z.High:= Data (6);
+      return AxisData;
+   end Read_Accelerometer_Raw;
+
    function Read_Magnetometer
      (This : LSM303AGR_Accelerometer) return All_Axes_Data
    is
@@ -218,10 +242,27 @@ package body LSM303AGR is
       function Convert (Low, High : UInt8) return Axis_Data is
          Tmp : UInt10;
       begin
-          -- TODO: support HiRes and LoPow modes
+          -- TODO: support HiRes (12 bit)and LoPow (8 bit) modes
           -- in conversion.
-         Tmp := UInt10 (Shift_Right (Low, 6));
-         Tmp := Tmp or UInt10 (High) * 2**2;
+          -- current mode is 10 bit, see specsheet https://www.st.com/resource/en/datasheet/lsm303agr.pdf
+          -- the output is 2's complement left-justified, meaning that depending on the power mode,
+          -- the left most part of low byte (the least significant bits) are zero'd.
+
+         Tmp := UInt10 (Shift_Right (Low, 6));   -- in this case 6 zero's shift right on the low byte.
+                                                 -- 0000000000 empty 10 bit
+                                                 --   xyz..... low bit
+                                                 --   000000xy shift right
+                                                 -- resultA is 00000000xy (shift right or empty)
+         Tmp := Tmp or UInt10 (High) * 2**2;     -- the 8 bits are put in an empty 10 bit structure, then multiplied with 2²
+                                                 -- 0000000000 empty 10 bit
+                                                 --   onmlkjih high bit
+                                                 -- resultB is 00onmlkjih
+                                                 -- multiply with 2^2 (cant we use shift left for this?)
+                                                 -- resultB is onmlkjih00
+                                                 --
+                                                 -- resultA or result B
+                                                 -- resultFinal is onmlkjihxy
+
          return To_Axis_Data (Tmp);
       end Convert;
 
@@ -262,4 +303,14 @@ package body LSM303AGR is
          raise Program_Error;
       end if;
    end Assert_Status;
+
+function Convert (Low, High : UInt8) return Axis_Data is
+         Tmp : UInt10;
+      begin
+          -- TODO: support HiRes and LoPow modes
+          -- in conversion.
+         Tmp := UInt10 (Shift_Right (Low, 6));
+         Tmp := Tmp or UInt10 (High) * 2**2;
+         return To_Axis_Data (Tmp);
+      end Convert;
 end LSM303AGR;

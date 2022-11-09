@@ -1,16 +1,15 @@
 with MicroBit.Radio;
 with HAL; use HAL;
 with MicroBit.Console; use MicroBit.Console;
-with nRF.Radio;
 use MicroBit;
 procedure Main is
    RXdata : Radio.RadioData;
    TxData : Radio.RadioData;
 begin
-   TxData.Length := 5;
-   TxData.Version:= 12;
-   TxData.Group := 1;
-   TxData.Protocol := 14;
+   TxData.Length := 3+2; -- This is important! Header is 4-1=3, payload is 2 bytes. If higher payload needed change this to a max of 32.
+   TxData.Version:= 12;  -- Since CRC is a bit buggy (see Radio package), current implementation uses both length and version as additional hardcoded crc check so make sure they match in both sender and receiver
+   TxData.Group := 1;    -- Since messages are broadcasted, a group can be used as unique ID to only use message of a certain ID
+   TxData.Protocol := 14;-- Protocol can be used for setting up a handshake for example. This could be useful to confirm if a package with message ID is actually received by sending an acknowledgement to the Sender. The Sender can then stop with sending message that messageID and send the next package.
 
    Radio.Setup(RadioFrequency => 2407,
                Length => TxData.Length,

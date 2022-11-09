@@ -30,7 +30,7 @@
 ------------------------------------------------------------------------------
 
 with MicroBit.IOsForTasking;  use MicroBit.IOsForTasking;
-with MicroBit.TimeWithRTC1;
+--with MicroBit.TimeWithRTC1;
 
 package MicroBit.Music is
 
@@ -38,7 +38,7 @@ package MicroBit.Music is
 
    type Note is record
       P  : Pitch;
-      Ms : MicroBit.TimeWithRTC1.Time_Ms;
+      Ms : Integer;
    end record;
 
    type Melody is array (Natural range <>) of Note;

@@ -54,6 +54,9 @@ package body MicroBit.Accelerometer is
    -- Data --
    ----------
 
+   function AccelDataRaw return LSM303AGR.All_Axes_Data_Raw
+   is (Acc.Read_Accelerometer_Raw);
+
    function AccelData return LSM303AGR.All_Axes_Data
    is (Acc.Read_Accelerometer);
 

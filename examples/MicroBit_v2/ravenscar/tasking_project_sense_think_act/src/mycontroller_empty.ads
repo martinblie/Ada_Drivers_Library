@@ -1,10 +1,11 @@
-package mycontroller_empty is
+package MyController_empty is
 
    type Directions is (Forward, Stop);
    
    task Sense with Priority => 1;
   
-   task Think with Priority=> 2;
+   task Think with Priority=> 1; -- what happens for the set direction if think and sense have the same prio and period?
+                                 -- what happens if think has a higher priority? Why is think' set direction overwritten by sense' set direction?
    
    task Act with Priority=> 3;
 
@@ -14,4 +15,4 @@ package mycontroller_empty is
    private
       DriveDirection : Directions := Stop;
    end MotorDriver;
-end mycontroller_empty;
+end MyController_empty;

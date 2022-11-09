@@ -73,6 +73,8 @@ package body MicroBit.Music is
       for N of M loop
          Play (Pin, N);
       end loop;
+	  
+	  Set (Pin, False); --stop
    end Play;
 
 end MicroBit.Music;

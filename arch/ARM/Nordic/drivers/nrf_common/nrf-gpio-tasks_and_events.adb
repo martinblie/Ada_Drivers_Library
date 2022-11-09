@@ -28,7 +28,6 @@
 --   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   --
 --                                                                          --
 ------------------------------------------------------------------------------
-
 with NRF_SVD.GPIOTE; use NRF_SVD.GPIOTE;
 with HAL;              use HAL;
 
@@ -146,7 +145,14 @@ package body nRF.GPIO.Tasks_And_Events is
    is
       CONFIG : CONFIG_Register renames GPIOTE_Periph.CONFIG (Integer (Chan));
    begin
-      CONFIG.PSEL := UInt5 (GPIO_Pin);
+      CONFIG.PSEL := UInt5 (GPIO_Pin mod 32);
+
+      if GPIO_Pin > 31 then
+        CONFIG.PORT := 1;
+      else
+        CONFIG.PORT := 0;
+      end if;
+
       CONFIG.POLARITY := (case Action is
                           when Set_Pin    => Lotohi,
                           when Clear_Pin  => Hitolo,

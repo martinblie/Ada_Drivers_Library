@@ -309,8 +309,9 @@ package NRF_SVD.GPIOTE is
       --  GPIO number associated with SET[n], CLR[n] and OUT[n] tasks and IN[n]
       --  event
       PSEL           : CONFIG_PSEL_Field := 16#0#;
+      PORT           : HAL.Bit := 16#0#;
       --  unspecified
-      Reserved_13_15 : HAL.UInt3 := 16#0#;
+      Reserved_14_15 : HAL.UInt2 := 16#0#;
       --  When In task mode: Operation to be performed on output when OUT[n]
       --  task is triggered. When In event mode: Operation on input that shall
       --  trigger IN[n] event.
@@ -330,7 +331,8 @@ package NRF_SVD.GPIOTE is
       MODE           at 0 range 0 .. 1;
       Reserved_2_7   at 0 range 2 .. 7;
       PSEL           at 0 range 8 .. 12;
-      Reserved_13_15 at 0 range 13 .. 15;
+      PORT           at 0 range 13 .. 13;
+      Reserved_14_15 at 0 range 14 .. 15;
       POLARITY       at 0 range 16 .. 17;
       Reserved_18_19 at 0 range 18 .. 19;
       OUTINIT        at 0 range 20 .. 20;
@@ -367,8 +369,11 @@ package NRF_SVD.GPIOTE is
       --  Disable interrupt
       INTENCLR    : aliased INTENCLR_Register;
       --  Description collection[0]: Configuration for OUT[n], SET[n] and
-      --  CLR[n] tasks and IN[n] event
+      --  CLR[n] tasks and IN[n] event PORT 0
       CONFIG      : aliased CONFIG_Registers;
+       --  Description collection[0]: Configuration for OUT[n], SET[n] and
+      --  CLR[n] tasks and IN[n] event PORT 1
+      CONFIG1      : aliased CONFIG_Registers;
    end record
      with Volatile;
 
