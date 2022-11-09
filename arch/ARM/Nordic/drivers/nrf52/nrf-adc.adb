@@ -130,7 +130,7 @@ package body nRF.ADC is
 
       --Sometimes results are illegal (value 65535, all 1's, which in 16 bit 2's complement is unattainable for a max 14 bit ADC)
       --This is a hardware fault caused by ground bounce, see https://github.com/apache/mynewt-core/issues/2338
-      if Result = 65535 then
+      if Result > 1023 then
          Result := 0;
       end if;
 

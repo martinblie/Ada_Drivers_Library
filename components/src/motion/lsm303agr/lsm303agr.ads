@@ -103,6 +103,12 @@ private
    OUT_Z_L_A     : constant Register_Address := 16#2C#;
    OUT_Z_H_A     : constant Register_Address := 16#2D#;
 
+   CFG_REG_A_M  : constant Register_Address := 16#60#;
+   CFG_REG_B_M  : constant Register_Address := 16#61#;
+   CFG_REG_C_M  : constant Register_Address := 16#62#;
+
+   STATUS_REG_M : constant Register_Address := 16#67#;
+
    OUT_X_L_REG_M : constant Register_Address := 16#68#;
    OUT_X_H_REG_M : constant Register_Address := 16#69#;
    OUT_Y_L_REG_M : constant Register_Address := 16#6A#;
@@ -130,10 +136,33 @@ private
       ODR  at 0 range 4 .. 7;
    end record;
 
+   type CFG_REG_A_M_Register is record
+      MD            : UInt2   := 0;
+      ODR           : UInt2   := 0;
+      LP            : Bit     := 0;
+      SOFT_RST      : Bit     := 0;
+      REBOOT        : Bit     := 0;
+      COMP_TEMP_EN  : Bit     := 0;
+   end record;
+
+   for CFG_REG_A_M_Register use record
+      MD            at 0 range 0..1;
+      ODR           at 0 range 2..3;
+      LP            at 0 range 4..4;
+      SOFT_RST      at 0 range 5..5;
+      REBOOT        at 0 range 6..6;
+      COMP_TEMP_EN  at 0 range 7..7;
+   end record;
+
    function To_UInt8 is new Ada.Unchecked_Conversion
      (CTRL_REG1_A_Register, UInt8);
    function To_Reg is new Ada.Unchecked_Conversion
      (UInt8, CTRL_REG1_A_Register);
+
+   function To_UInt8 is new Ada.Unchecked_Conversion
+     (CFG_REG_A_M_Register, UInt8);
+   function To_Reg is new Ada.Unchecked_Conversion
+     (UInt8, CFG_REG_A_M_Register);
 
    type STATUS_REG_A_Register is record
       ZYXOVR : Bit := 0;

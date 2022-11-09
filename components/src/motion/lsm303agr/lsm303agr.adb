@@ -50,17 +50,34 @@ package body LSM303AGR is
    procedure Configure (This : LSM303AGR_Accelerometer; Date_Rate : Data_Rate)
    is
       CTRLA : CTRL_REG1_A_Register;
+      CFGM  : CFG_REG_A_M_Register;
    begin
       CTRLA.Xen  := 1;
       CTRLA.Yen  := 1;
       CTRLA.Zen  := 1;
       CTRLA.LPen := 0;
-      CTRLA.ODR  := Date_Rate'Enum_Rep;
+      --CTRLA.ODR  := Date_Rate'Enum_Rep;
+      CTRLA.ODR  := 2;
+
+      CFGM.MD := 0;
+      CFGM.ODR := 3;
+      CFGM.LP := 0;
+      CFGM.SOFT_RST := 0;
+      CFGM.REBOOT := 0;
+      CFGM.COMP_TEMP_EN := 1;
 
       This.Write_Register
         (Accelerometer_Address, CTRL_REG1_A, To_UInt8 (CTRLA));
 
-      --  CTRLA.Xen  := 0;
+      This.Write_Register
+        (Magnetometer_Address, CFG_REG_A_M, To_UInt8 (CFGM));
+
+      This.Write_Register
+        (Magnetometer_Address, CFG_REG_B_M, 2 );
+      This.Write_Register
+          (Magnetometer_Address, CFG_REG_C_M, 10 );
+
+      --  CFGM  := 0;
       --  CTRLA.Yen  := 0;
       --  CTRLA.Zen  := 0;
       --  CTRLA.LPen := 0;
@@ -68,6 +85,8 @@ package body LSM303AGR is
       --
       --  This.Write_Register
       --    (Magnetometer_Address, CFG_REG_A_M, To_UInt8 (CTRLA));
+
+
    end Configure;
 
    procedure Assert_Status (Status : I2C_Status);

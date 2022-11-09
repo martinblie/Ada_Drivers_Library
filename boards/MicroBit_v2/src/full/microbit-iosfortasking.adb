@@ -39,6 +39,7 @@ with nRF.GPIO.Tasks_And_Events; use nRF.GPIO.Tasks_And_Events;
 with nRF.Events;                use nRF.Events;
 with nRF.Interrupts;            use nRF.Interrupts;
 
+
 package body MicroBit.IOsForTasking is
    --  SB: Implementation constraints:
    --  - Analog OUT allowed only on the 6 (exposed) analog IN pins while Nordic documentation says you can use any pin.
@@ -60,7 +61,7 @@ package body MicroBit.IOsForTasking is
    --    We have enough GPIOTE channels for other packages, but this package now blocks all the PPI for other functionality.
    --    Using the hardware PWM driver would be better as there are 12 channels and no requirement for PPI and GPIOTE
    --
-								  
+
 
    --  The analog out feature is implemented as PWM signal. To generate the PWM
    --  signals we use a timer with the configuration described bellow.
@@ -160,7 +161,7 @@ package body MicroBit.IOsForTasking is
    procedure Configure_PPI (Id : PWM_Id);
    procedure Configure_GPIOTE (Id : PWM_Id);
    function To_Compare_Value (V : Analog_Value) return UInt32;
- 
+
    ----------------------
    -- To_Compare_Value --
    ----------------------
@@ -324,7 +325,7 @@ package body MicroBit.IOsForTasking is
    procedure Set_Analog_Period_Us (Period : Natural) is
    begin
       PWM_Period := UInt32 (Period) * PWM_Precision; -- !! change to divide by PWM_precision if prescaler is lower than 1 MHz
-	  
+
       --  Update the comparator values for ech PWM
       for PWM of PWMs loop
          PWM.Cmp := To_Compare_Value (PWM.Pulse_Width);
@@ -380,7 +381,7 @@ if Value = 0 then
          PWMs (PWM_Alloc (Pin)).Pulse_Width := Value;
          PWMs (PWM_Alloc (Pin)).Cmp := To_Compare_Value (Value);
       end if;
-	  
+
    end Write;
 
    ------------
@@ -414,7 +415,7 @@ if Value = 0 then
                                          when others => 0),
                             Input => Pin_One_Forth,
                             Ref   => VDD_One_Forth, --VDD_One_Forth
-                            Res   => Res_10bit);
+                                   Res   => Res_10bit);
       return Analog_Value (Result);
    end Analog;
 
